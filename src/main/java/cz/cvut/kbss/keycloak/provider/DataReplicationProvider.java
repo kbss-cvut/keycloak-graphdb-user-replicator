@@ -16,16 +16,27 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataReplicationProvider.class);
 
-    private final UserProvider userProvider;
-    private final RealmProvider realmProvider;
-
     private final Configuration configuration;
 
-    public DataReplicationProvider(UserProvider userProvider, RealmProvider realmProvider,
-                                   Configuration configuration) {
-        this.userProvider = userProvider;
-        this.realmProvider = realmProvider;
+    private UserProvider userProvider;
+    private RealmProvider realmProvider;
+
+    private UserAccountDao userAccountDao;
+
+    public DataReplicationProvider(Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public void setUserProvider(UserProvider userProvider) {
+        this.userProvider = userProvider;
+    }
+
+    public void setRealmProvider(RealmProvider realmProvider) {
+        this.realmProvider = realmProvider;
+    }
+
+    public void setUserAccountDao(UserAccountDao userAccountDao) {
+        this.userAccountDao = userAccountDao;
     }
 
     @Override
@@ -45,7 +56,7 @@ public class DataReplicationProvider implements EventListenerProvider {
             case REGISTER:
                 // TODO Replicate data into triple store, create user in GraphDB
                 // This is in case user self-registration is supported
-                logEvent(() -> toString(event));
+                newUser(resolveUser(event));
             default:
                 break;
         }
@@ -53,6 +64,11 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private boolean isDifferentRealm(String eventRealmId) {
         return !Objects.equals(configuration.getRealmId(), eventRealmId);
+    }
+
+    private void newUser(KodiUserAccount userAccount) {
+        LOG.info("Generating new user metadata into triple store for user {}", userAccount);
+        userAccountDao.transactional(() -> userAccountDao.persist(userAccount));
     }
 
     private void logEvent(Supplier<String> toString) {
@@ -95,8 +111,8 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
         switch (event.getOperationType()) {
             case CREATE:
-                // TODO Replicate data into triple store, create user in GraphDB
-                logEvent(() -> toString(event));
+                // TODO create user in GraphDB
+                newUser(resolveUser(event));
                 break;
             case UPDATE:
                 // TODO Update data in triple store and if email changed, also update GraphDB user
@@ -139,5 +155,6 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     @Override
     public void close() {
+        userAccountDao.close();
     }
 }

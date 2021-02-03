@@ -1,74 +1,65 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import org.keycloak.Config;
+
 public class Configuration {
 
-    private String realmId;
+    private final String realmId;
 
-    private String repositoryUrl;
+    private final String repositoryId;
 
-    private String repositoryUsername;
+    private final String repositoryUsername;
 
-    private String repositoryPassword;
+    private final String repositoryPassword;
 
-    private String graphDBServerUrl;
+    private final String language;
 
-    private String graphDBUsername;
+    private final String graphDBServerUrl;
 
-    private String graphDBPassword;
+    private final String graphDBUsername;
+
+    private final String graphDBPassword;
+
+    Configuration(Config.Scope scope) {
+        this.realmId = scope.get("realmId");
+        this.graphDBServerUrl = scope.get("graphDBServerUrl");
+        this.repositoryId = this.graphDBServerUrl + "/repositories/" + scope.get("repositoryId");
+        this.repositoryUsername = scope.get("repositoryUsername");
+        this.repositoryPassword = scope.get("repositoryPassword");
+        this.language = scope.get("language") != null ? scope.get("language") : "en";
+        this.graphDBUsername = scope.get("graphDBUsername");
+        this.graphDBPassword = scope.get("graphDBPassword");
+    }
 
     public String getRealmId() {
         return realmId;
     }
 
-    public void setRealmId(String realmId) {
-        this.realmId = realmId;
-    }
-
-    public String getRepositoryUrl() {
-        return repositoryUrl;
-    }
-
-    public void setRepositoryUrl(String repositoryUrl) {
-        this.repositoryUrl = repositoryUrl;
+    public String getRepositoryId() {
+        return repositoryId;
     }
 
     public String getRepositoryUsername() {
         return repositoryUsername;
     }
 
-    public void setRepositoryUsername(String repositoryUsername) {
-        this.repositoryUsername = repositoryUsername;
-    }
-
     public String getRepositoryPassword() {
         return repositoryPassword;
     }
 
-    public void setRepositoryPassword(String repositoryPassword) {
-        this.repositoryPassword = repositoryPassword;
+    public String getLanguage() {
+        return language;
     }
 
     public String getGraphDBServerUrl() {
         return graphDBServerUrl;
     }
 
-    public void setGraphDBServerUrl(String graphDBServerUrl) {
-        this.graphDBServerUrl = graphDBServerUrl;
-    }
-
     public String getGraphDBUsername() {
         return graphDBUsername;
     }
 
-    public void setGraphDBUsername(String graphDBUsername) {
-        this.graphDBUsername = graphDBUsername;
-    }
-
     public String getGraphDBPassword() {
         return graphDBPassword;
-    }
-
-    public void setGraphDBPassword(String graphDBPassword) {
-        this.graphDBPassword = graphDBPassword;
     }
 }

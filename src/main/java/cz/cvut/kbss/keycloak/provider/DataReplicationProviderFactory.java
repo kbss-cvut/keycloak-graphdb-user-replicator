@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import org.eclipse.rdf4j.repository.Repository;
 import org.keycloak.Config;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventListenerProviderFactory;
@@ -12,24 +13,29 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     private static final Logger LOG = LoggerFactory.getLogger(DataReplicationProviderFactory.class);
 
-    private final Configuration configuration = new Configuration();
+    private Configuration configuration;
+
+    private Repository repository;
 
     @Override
     public EventListenerProvider create(KeycloakSession keycloakSession) {
-        return new DataReplicationProvider(keycloakSession.users(), keycloakSession.realms(), configuration);
+        if (repository == null) {
+            // Init persistence factory lazily, because GraphDB won't start until its OIDC provider (Keycloak) is available
+            this.repository = PersistenceFactory.connect(configuration);
+        }
+        final DataReplicationProvider provider = new DataReplicationProvider(configuration);
+        provider.setUserProvider(keycloakSession.users());
+        provider.setRealmProvider(keycloakSession.realms());
+        provider.setUserAccountDao(new UserAccountDao(repository.getConnection()));
+        return provider;
     }
 
     @Override
     public void init(Config.Scope scope) {
         LOG.debug("Loading configuration from scope.");
         KodiUserAccount.setNamespace(scope.get("namespace"));
-        configuration.setRealmId(scope.get("realmId"));
-        configuration.setRepositoryUrl(scope.get("repositoryUrl"));
-        configuration.setRepositoryUsername(scope.get("repositoryUsername"));
-        configuration.setRepositoryPassword(scope.get("repositoryPassword"));
-        configuration.setGraphDBServerUrl(scope.get("graphDBServerUrl"));
-        configuration.setGraphDBUsername(scope.get("graphDBUsername"));
-        configuration.setGraphDBPassword(scope.get("graphDBPassword"));
+        KodiUserAccount.setContext(scope.get("context"));
+        this.configuration = new Configuration(scope);
     }
 
     @Override
@@ -38,6 +44,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     @Override
     public void close() {
+        repository.shutDown();
     }
 
     @Override

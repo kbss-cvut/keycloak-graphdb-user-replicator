@@ -9,6 +9,8 @@ public class KodiUserAccount {
 
     private static String namespace = "http://onto.fel.cvut.cz/ontologies/uzivatel/";
 
+    private static String context = null;
+
     private URI uri;
 
     private String firstName;
@@ -62,6 +64,14 @@ public class KodiUserAccount {
 
     public static void setNamespace(String namespace) {
         KodiUserAccount.namespace = namespace;
+    }
+
+    public static void setContext(String context) {
+        KodiUserAccount.context = context;
+    }
+
+    public static String getContext() {
+        return context;
     }
 
     @Override
