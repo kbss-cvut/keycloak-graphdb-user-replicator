@@ -2,50 +2,61 @@ package cz.cvut.kbss.keycloak.provider;
 
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
-import org.keycloak.events.EventType;
 import org.keycloak.events.admin.AdminEvent;
-import org.keycloak.events.admin.OperationType;
 import org.keycloak.models.RealmProvider;
+import org.keycloak.models.UserModel;
 import org.keycloak.models.UserProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class DataReplicationProvider implements EventListenerProvider {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DataReplicationProvider.class);
 
     private final UserProvider userProvider;
     private final RealmProvider realmProvider;
 
-    private final String realmId;
+    private final Configuration configuration;
 
-    public DataReplicationProvider(UserProvider userProvider, RealmProvider realmProvider, String realmId) {
+    public DataReplicationProvider(UserProvider userProvider, RealmProvider realmProvider,
+                                   Configuration configuration) {
         this.userProvider = userProvider;
         this.realmProvider = realmProvider;
-        this.realmId = realmId;
+        this.configuration = configuration;
     }
 
     @Override
     public void onEvent(Event event) {
-        if (!Objects.equals(realmId, event.getRealmId())) {
+        if (isDifferentRealm(event.getRealmId())) {
             return;
         }
-        if (event.getType() == EventType.UPDATE_PROFILE) {
-            // TODO: Update data in triple store
-            System.out.println("EVENT: " + toString(event));
-        } else if (event.getType() == EventType.UPDATE_EMAIL) {
-            // TODO: Update user in GraphDB
-            System.out.println("EVENT: " + toString(event));
+        switch (event.getType()) {
+            case UPDATE_PROFILE:
+                // TODO: Update data in triple store
+                logEvent(() -> toString(event));
+                break;
+            case UPDATE_EMAIL:
+                // TODO: Update user in GraphDB
+                logEvent(() -> toString(event));
+                break;
+            case REGISTER:
+                // TODO Replicate data into triple store, create user in GraphDB
+                // This is in case user self-registration is supported
+                logEvent(() -> toString(event));
+            default:
+                break;
         }
     }
 
-    @Override
-    public void onEvent(AdminEvent event, boolean includeRepresentation) {
-        if (!Objects.equals(realmId, event.getRealmId())) {
-            return;
-        }
-        if (event.getOperationType() == OperationType.CREATE) {
-            System.out.println("EVENT: " + toString(event));
-            // TODO Replicate data into triple store, create user in GraphDB
-        }
+    private boolean isDifferentRealm(String eventRealmId) {
+        return !Objects.equals(configuration.getRealmId(), eventRealmId);
+    }
+
+    private void logEvent(Supplier<String> toString) {
+        LOG.info("EVENT: {}", toString.get());
     }
 
     private String toString(Event event) {
@@ -73,7 +84,31 @@ public class DataReplicationProvider implements EventListenerProvider {
     }
 
     private KodiUserAccount getUser(String userId, String realmId) {
-        return new KodiUserAccount(userProvider.getUserById(userId, realmProvider.getRealm(realmId)));
+        final UserModel userModel = userProvider.getUserById(userId, realmProvider.getRealm(realmId));
+        return userModel != null ? new KodiUserAccount(userModel) : null;
+    }
+
+    @Override
+    public void onEvent(AdminEvent event, boolean includeRepresentation) {
+        if (isDifferentRealm(event.getRealmId())) {
+            return;
+        }
+        switch (event.getOperationType()) {
+            case CREATE:
+                // TODO Replicate data into triple store, create user in GraphDB
+                logEvent(() -> toString(event));
+                break;
+            case UPDATE:
+                // TODO Update data in triple store and if email changed, also update GraphDB user
+                logEvent(() -> toString(event));
+                break;
+            case DELETE:
+                // TODO Remove user from GraphDB
+                logEvent(() -> toString(event));
+                break;
+            default:
+                break;
+        }
     }
 
     private String toString(AdminEvent adminEvent) {
