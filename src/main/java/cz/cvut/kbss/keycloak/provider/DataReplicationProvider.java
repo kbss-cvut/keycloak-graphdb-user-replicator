@@ -83,6 +83,8 @@ public class DataReplicationProvider implements EventListenerProvider {
         sb.append(adminEvent.getOperationType());
         sb.append(", realmId=");
         sb.append(adminEvent.getAuthDetails().getClientId());
+        sb.append(", adminId=");
+        sb.append(adminEvent.getAuthDetails().getUserId());
         sb.append(", user=");
         sb.append(resolveUser(adminEvent));
 
@@ -96,7 +98,7 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private KodiUserAccount resolveUser(AdminEvent event) {
         final String resourceUri = event.getResourcePath();
-        final String userId = resourceUri.substring(resourceUri.lastIndexOf('/' + 1));
+        final String userId = resourceUri.substring(resourceUri.lastIndexOf('/') + 1);
         return getUser(userId, event.getRealmId());
     }
 
