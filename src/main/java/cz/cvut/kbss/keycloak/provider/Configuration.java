@@ -23,7 +23,7 @@ public class Configuration {
     Configuration(Config.Scope scope) {
         this.realmId = scope.get("realmId");
         this.graphDBServerUrl = scope.get("graphDBServerUrl");
-        this.repositoryId = this.graphDBServerUrl + "/repositories/" + scope.get("repositoryId");
+        this.repositoryId = scope.get("repositoryId");
         this.repositoryUsername = scope.get("repositoryUsername");
         this.repositoryPassword = scope.get("repositoryPassword");
         this.language = scope.get("language") != null ? scope.get("language") : "en";

@@ -26,7 +26,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
         final DataReplicationProvider provider = new DataReplicationProvider(configuration);
         provider.setUserProvider(keycloakSession.users());
         provider.setRealmProvider(keycloakSession.realms());
-        provider.setUserAccountDao(new UserAccountDao(repository.getConnection()));
+        provider.setUserAccountDao(new UserAccountDao(repository.getConnection(), configuration.getLanguage()));
         return provider;
     }
 
