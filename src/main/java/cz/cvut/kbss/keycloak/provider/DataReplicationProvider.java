@@ -46,8 +46,7 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
         switch (event.getType()) {
             case UPDATE_PROFILE:
-                // TODO: Update data in triple store
-                logEvent(() -> toString(event));
+                updateUser(resolveUser(event));
                 break;
             case UPDATE_EMAIL:
                 // TODO: Update user in GraphDB
@@ -69,6 +68,11 @@ public class DataReplicationProvider implements EventListenerProvider {
     private void newUser(KodiUserAccount userAccount) {
         LOG.info("Generating new user metadata into triple store for user {}", userAccount);
         userAccountDao.transactional(() -> userAccountDao.persist(userAccount));
+    }
+
+    private void updateUser(KodiUserAccount userAccount) {
+        LOG.info("Updating metadata of user {} in triple store", userAccount);
+        userAccountDao.transactional(() -> userAccountDao.update(userAccount));
     }
 
     private void logEvent(Supplier<String> toString) {
@@ -115,8 +119,8 @@ public class DataReplicationProvider implements EventListenerProvider {
                 newUser(resolveUser(event));
                 break;
             case UPDATE:
-                // TODO Update data in triple store and if email changed, also update GraphDB user
-                logEvent(() -> toString(event));
+                // TODO If email changed, also update GraphDB user
+                updateUser(resolveUser(event));
                 break;
             case DELETE:
                 // TODO Remove user from GraphDB
