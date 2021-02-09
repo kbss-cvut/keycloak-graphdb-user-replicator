@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import org.eclipse.rdf4j.repository.Repository;
 import org.keycloak.Config;
 import org.keycloak.events.EventListenerProvider;
@@ -23,11 +24,10 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
             // Init persistence factory lazily, because GraphDB won't start until its OIDC provider (Keycloak) is available
             this.repository = PersistenceFactory.connect(configuration);
         }
-        final DataReplicationProvider provider = new DataReplicationProvider(configuration);
-        provider.setUserProvider(keycloakSession.users());
-        provider.setRealmProvider(keycloakSession.realms());
-        provider.setUserAccountDao(new UserAccountDao(repository.getConnection(), configuration.getLanguage()));
-        return provider;
+        return new DataReplicationProvider(
+                new KeycloakAdapter(keycloakSession.users(), keycloakSession.realms(), configuration),
+                new UserAccountDao(repository.getConnection(), configuration.getLanguage()),
+                new GraphDBUserDao(configuration.getGraphDBServerUrl(), configuration.getRepositoryId()));
     }
 
     @Override

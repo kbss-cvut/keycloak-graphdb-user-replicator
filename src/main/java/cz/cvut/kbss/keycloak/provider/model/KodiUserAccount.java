@@ -1,4 +1,4 @@
-package cz.cvut.kbss.keycloak.provider;
+package cz.cvut.kbss.keycloak.provider.model;
 
 import org.keycloak.models.UserModel;
 

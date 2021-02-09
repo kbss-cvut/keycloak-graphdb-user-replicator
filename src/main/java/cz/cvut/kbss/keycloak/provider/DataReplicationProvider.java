@@ -1,47 +1,33 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.admin.AdminEvent;
-import org.keycloak.models.RealmProvider;
-import org.keycloak.models.UserModel;
-import org.keycloak.models.UserProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
 public class DataReplicationProvider implements EventListenerProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataReplicationProvider.class);
 
-    private final Configuration configuration;
+    private final KeycloakAdapter keycloakAdapter;
 
-    private UserProvider userProvider;
-    private RealmProvider realmProvider;
+    private final UserAccountDao userAccountDao;
 
-    private UserAccountDao userAccountDao;
+    private final GraphDBUserDao graphDBUserDao;
 
-    public DataReplicationProvider(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public void setUserProvider(UserProvider userProvider) {
-        this.userProvider = userProvider;
-    }
-
-    public void setRealmProvider(RealmProvider realmProvider) {
-        this.realmProvider = realmProvider;
-    }
-
-    public void setUserAccountDao(UserAccountDao userAccountDao) {
+    public DataReplicationProvider(KeycloakAdapter keycloakAdapter, UserAccountDao userAccountDao, GraphDBUserDao graphDBUserDao) {
+        this.keycloakAdapter = keycloakAdapter;
         this.userAccountDao = userAccountDao;
+        this.graphDBUserDao = graphDBUserDao;
     }
 
     @Override
     public void onEvent(Event event) {
-        if (isDifferentRealm(event.getRealmId())) {
+        if (keycloakAdapter.isDifferentRealm(event.getRealmId())) {
             return;
         }
         switch (event.getType()) {
@@ -61,13 +47,10 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
     }
 
-    private boolean isDifferentRealm(String eventRealmId) {
-        return !Objects.equals(configuration.getRealmId(), eventRealmId);
-    }
-
     private void newUser(KodiUserAccount userAccount) {
         LOG.info("Generating new user metadata into triple store for user {}", userAccount);
         userAccountDao.transactional(() -> userAccountDao.persist(userAccount));
+        graphDBUserDao.addUser(userAccount);
     }
 
     private void updateUser(KodiUserAccount userAccount) {
@@ -104,13 +87,12 @@ public class DataReplicationProvider implements EventListenerProvider {
     }
 
     private KodiUserAccount getUser(String userId, String realmId) {
-        final UserModel userModel = userProvider.getUserById(userId, realmProvider.getRealm(realmId));
-        return userModel != null ? new KodiUserAccount(userModel) : null;
+        return keycloakAdapter.getUser(userId, realmId);
     }
 
     @Override
     public void onEvent(AdminEvent event, boolean includeRepresentation) {
-        if (isDifferentRealm(event.getRealmId())) {
+        if (keycloakAdapter.isDifferentRealm(event.getRealmId())) {
             return;
         }
         switch (event.getOperationType()) {
