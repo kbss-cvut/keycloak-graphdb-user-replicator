@@ -9,6 +9,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
+/**
+ * Replicates user metadata on relevant events into a GraphDB instance.
+ * <p>
+ * This replication involves:
+ * <ul>
+ *     <li>Adding basic user metadata (first name, last name) into the configured repository</li>
+ *     <li>Creating a user account in the GraphDB user database with write access to the configured repository</li>
+ * </ul>
+ * <p>
+ * Note that due to the nature of event representation in Keycloak, on update, user metadata are updated, but the since it is not possible
+ * to resolve original username, a new user account is created in GraphDB user database without removing the old one. Since this change involves updating
+ * the username, it is not a security risk, since the user account becomes inaccessible.
+ */
 public class DataReplicationProvider implements EventListenerProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataReplicationProvider.class);
@@ -35,11 +48,10 @@ public class DataReplicationProvider implements EventListenerProvider {
                 updateUser(resolveUser(event));
                 break;
             case UPDATE_EMAIL:
-                // TODO: Update user in GraphDB
-                logEvent(() -> toString(event));
+                // Create new GraphDB user account, the old one will remain, but will be inaccessible
+                addGraphDBUser(resolveUser(event));
                 break;
             case REGISTER:
-                // TODO Replicate data into triple store, create user in GraphDB
                 // This is in case user self-registration is supported
                 newUser(resolveUser(event));
             default:
@@ -50,36 +62,22 @@ public class DataReplicationProvider implements EventListenerProvider {
     private void newUser(KodiUserAccount userAccount) {
         LOG.info("Generating new user metadata into triple store for user {}", userAccount);
         userAccountDao.transactional(() -> userAccountDao.persist(userAccount));
+        addGraphDBUser(userAccount);
+    }
+
+    private void addGraphDBUser(KodiUserAccount userAccount) {
+        LOG.info("Adding user account to GraphDB use database.");
         graphDBUserDao.addUser(userAccount);
     }
 
     private void updateUser(KodiUserAccount userAccount) {
         LOG.info("Updating metadata of user {} in triple store", userAccount);
         userAccountDao.transactional(() -> userAccountDao.update(userAccount));
+        addGraphDBUser(userAccount);
     }
 
     private void logEvent(Supplier<String> toString) {
         LOG.info("EVENT: {}", toString.get());
-    }
-
-    private String toString(Event event) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("type=");
-        sb.append(event.getType());
-        sb.append(", realmId=");
-        sb.append(event.getRealmId());
-        sb.append(", clientId=");
-        sb.append(event.getClientId());
-        sb.append(", user=");
-        sb.append(resolveUser(event));
-
-        if (event.getError() != null) {
-            sb.append(", error=");
-            sb.append(event.getError());
-        }
-
-        return sb.toString();
     }
 
     private KodiUserAccount resolveUser(Event event) {
@@ -97,11 +95,9 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
         switch (event.getOperationType()) {
             case CREATE:
-                // TODO create user in GraphDB
                 newUser(resolveUser(event));
                 break;
             case UPDATE:
-                // TODO If email changed, also update GraphDB user
                 updateUser(resolveUser(event));
                 break;
             case DELETE:

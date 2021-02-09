@@ -27,7 +27,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
         return new DataReplicationProvider(
                 new KeycloakAdapter(keycloakSession.users(), keycloakSession.realms(), configuration),
                 new UserAccountDao(repository.getConnection(), configuration.getLanguage()),
-                new GraphDBUserDao(configuration.getGraphDBServerUrl(), configuration.getRepositoryId()));
+                new GraphDBUserDao(configuration));
     }
 
     @Override
