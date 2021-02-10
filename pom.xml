@@ -17,7 +17,6 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <version.keycloak>12.0.1</version.keycloak>
         <rdf4j.version>3.5.1</rdf4j.version>
     </properties>
 
@@ -28,6 +27,10 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
         </repository>
     </repositories>
 
@@ -45,7 +48,6 @@
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-server-spi-private</artifactId>
-            <version>${version.keycloak}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -81,7 +83,7 @@
                 <!-- Generate entity classes from OWL integrity constraints -->
                 <groupId>cz.cvut.kbss.jopa</groupId>
                 <artifactId>jopa-maven-plugin</artifactId>
-                <version>0.16.2</version>
+                <version>0.16.3</version>
                 <configuration>
                     <package>cz.cvut.kbss.keycloak.provider</package>
                     <output-directory>${project.basedir}/src/main/generated-sources</output-directory>
@@ -103,7 +105,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.10</version>
                 <executions>
                     <execution>
                         <id>add-source</id>

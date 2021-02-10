@@ -24,7 +24,7 @@ public class GraphDBUserDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphDBUserDao.class);
 
-    private static final String USER_MANAGEMENT_PATH = "/rest/security/user/";
+    private static final String USER_MANAGEMENT_PATH = "rest/security/user/";
     private static final String JSON_MIME_TYPE = "application/json";
 
     private final Configuration configuration;
@@ -42,25 +42,37 @@ public class GraphDBUserDao {
     private void postUserToGraphDB(String username, GraphDBUserDto user) {
         final ObjectMapper objectMapper = new ObjectMapper();
         final CredentialsProvider provider = new BasicCredentialsProvider();
-        if (configuration.getGraphDBUsername() != null) {
-            provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(configuration.getGraphDBUsername(), configuration.getGraphDBPassword()));
+        if (configuration.getRepositoryUsername() != null) {
+            provider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials(configuration.getRepositoryUsername(),
+                            configuration.getRepositoryPassword()));
         }
-        try (final CloseableHttpClient client = HttpClientBuilder.create().setDefaultCredentialsProvider(provider).build()) {
-            final HttpPost post = new HttpPost(configuration.getGraphDBServerUrl() + USER_MANAGEMENT_PATH + username);
+        try (final CloseableHttpClient client = HttpClientBuilder.create().setDefaultCredentialsProvider(provider)
+                                                                 .build()) {
+            final HttpPost post = new HttpPost(resolveUserEndpointUrl(username));
             LOG.debug("Creating GraphDB user by POSTing configuration to URL {}.", post.getURI());
             post.setEntity(new StringEntity(objectMapper.writeValueAsString(user)));
             post.addHeader(HttpHeaders.CONTENT_TYPE, JSON_MIME_TYPE);
             CloseableHttpResponse resp = client.execute(post);
             if (resp.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
                 if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_BAD_REQUEST) {
-                    LOG.warn("User account {} already exists.", username);
+                    LOG.info("User account {} already exists.", username);
                     return;
                 }
                 LOG.debug("User creation failed. Response body is: {}", resp.getEntity().toString());
-                throw new GraphDBConnectionException("User creation failed, received status " + resp.getStatusLine().getStatusCode());
+                throw new GraphDBConnectionException(
+                        "User creation failed, received status " + resp.getStatusLine().getStatusCode());
             }
         } catch (IOException e) {
             throw new GraphDBConnectionException("Unable to create GraphDB user account for " + username, e);
         }
+    }
+
+    private String resolveUserEndpointUrl(String username) {
+        String url = configuration.getGraphDBServerUrl();
+        if (!url.endsWith("/")) {
+            url += "/";
+        }
+        return url + USER_MANAGEMENT_PATH + username;
     }
 }

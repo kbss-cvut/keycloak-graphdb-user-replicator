@@ -7,8 +7,6 @@ import org.keycloak.events.admin.AdminEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Supplier;
-
 /**
  * Replicates user metadata on relevant events into a GraphDB instance.
  * <p>
@@ -20,7 +18,9 @@ import java.util.function.Supplier;
  * <p>
  * Note that due to the nature of event representation in Keycloak, on update, user metadata are updated, but the since it is not possible
  * to resolve original username, a new user account is created in GraphDB user database without removing the old one. Since this change involves updating
- * the username, it is not a security risk, since the user account becomes inaccessible.
+ * the username, it is not a security risk, since the user account becomes inaccessible. The same holds for user removal - it will
+ * not be removed from the GraphDB user database, because the corresponding event does not contain info about which user account
+ * was removed.
  */
 public class DataReplicationProvider implements EventListenerProvider {
 
@@ -32,7 +32,8 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private final GraphDBUserDao graphDBUserDao;
 
-    public DataReplicationProvider(KeycloakAdapter keycloakAdapter, UserAccountDao userAccountDao, GraphDBUserDao graphDBUserDao) {
+    public DataReplicationProvider(KeycloakAdapter keycloakAdapter, UserAccountDao userAccountDao,
+                                   GraphDBUserDao graphDBUserDao) {
         this.keycloakAdapter = keycloakAdapter;
         this.userAccountDao = userAccountDao;
         this.graphDBUserDao = graphDBUserDao;
@@ -76,10 +77,6 @@ public class DataReplicationProvider implements EventListenerProvider {
         addGraphDBUser(userAccount);
     }
 
-    private void logEvent(Supplier<String> toString) {
-        LOG.info("EVENT: {}", toString.get());
-    }
-
     private KodiUserAccount resolveUser(Event event) {
         return getUser(event.getUserId(), event.getRealmId());
     }
@@ -100,33 +97,9 @@ public class DataReplicationProvider implements EventListenerProvider {
             case UPDATE:
                 updateUser(resolveUser(event));
                 break;
-            case DELETE:
-                // TODO Remove user from GraphDB
-                logEvent(() -> toString(event));
-                break;
             default:
                 break;
         }
-    }
-
-    private String toString(AdminEvent adminEvent) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("operationType=");
-        sb.append(adminEvent.getOperationType());
-        sb.append(", realmId=");
-        sb.append(adminEvent.getAuthDetails().getClientId());
-        sb.append(", adminId=");
-        sb.append(adminEvent.getAuthDetails().getUserId());
-        sb.append(", user=");
-        sb.append(resolveUser(adminEvent));
-
-        if (adminEvent.getError() != null) {
-            sb.append(", error=");
-            sb.append(adminEvent.getError());
-        }
-
-        return sb.toString();
     }
 
     private KodiUserAccount resolveUser(AdminEvent event) {
