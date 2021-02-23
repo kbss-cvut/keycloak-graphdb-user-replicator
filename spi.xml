@@ -1,0 +1,6 @@
+<spi name="eventsListener">
+    <provider name="keycloak-graphdb-user-replicator" enabled="true">
+        <properties>
+        </properties>
+    </provider>
+</spi>
