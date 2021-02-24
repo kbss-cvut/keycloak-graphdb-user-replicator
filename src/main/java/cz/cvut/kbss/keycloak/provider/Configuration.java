@@ -1,6 +1,9 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import java.util.Base64;
+import java.util.Map;
 import org.keycloak.Config;
+import org.yaml.snakeyaml.Yaml;
 
 public class Configuration {
 
@@ -17,12 +20,31 @@ public class Configuration {
     private final String graphDBServerUrl;
 
     Configuration(Config.Scope scope) {
-        this.realmId = scope.get("realmId");
-        this.graphDBServerUrl = scope.get("graphDBServerUrl");
-        this.repositoryId = scope.get("repositoryId");
-        this.repositoryUsername = scope.get("repositoryUsername");
-        this.repositoryPassword = scope.get("repositoryPassword");
-        this.language = scope.get("language") != null ? scope.get("language") : "en";
+        final String components = getProperty("COMPONENTS");
+        if (components == null) {
+            throw new RuntimeException("Environmental variable 'COMPONENTS' must be set.");
+        }
+        final Map<String, Object> dbServer =
+            (Map<String, Object>) parseComponents(components).get("dbServer");
+        final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
+
+        this.realmId = getProperty("REALM_ID");
+        this.graphDBServerUrl = parser.getGraphdbUrl();
+        this.repositoryId = parser.getRepositoryId();
+        this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
+        this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
+        this.language = getProperty("language") != null ? getProperty("language") : "en";
+        // TODO this.context = getProperty("CONTEXT");
+        // TODO this.namespace = getProperty("NAMESPACE");
+    }
+
+    private String getProperty(String key) {
+        return System.getenv(key);
+    }
+
+    private Map<String, Object> parseComponents(String components) {
+        final String componentsDecoded = new String(Base64.getDecoder().decode(components));
+        return new Yaml().load(componentsDecoded);
     }
 
     public String getRealmId() {
