@@ -2,6 +2,7 @@ package cz.cvut.kbss.keycloak.provider;
 
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import org.keycloak.Config;
 import org.yaml.snakeyaml.Yaml;
 
@@ -29,13 +30,17 @@ public class Configuration {
         final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
 
         this.realmId = getProperty("REALM_ID");
-        this.graphDBServerUrl = parser.getGraphdbUrl();
-        this.repositoryId = parser.getRepositoryId();
+        this.graphDBServerUrl = isNullOrEmpty(getProperty("DB_SERVER_URL")) ? parser.getGraphdbUrl() : getProperty("DB_SERVER_URL");
+        this.repositoryId = isNullOrEmpty(getProperty("DB_SERVER_REPOSITORY_ID")) ? parser.getRepositoryId() : getProperty("DB_SERVER_REPOSITORY_ID");
         this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
         this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
         this.language = getProperty("language") != null ? getProperty("language") : "en";
         // TODO this.context = getProperty("CONTEXT");
         // TODO this.namespace = getProperty("NAMESPACE");
+    }
+
+    private boolean isNullOrEmpty(final String nullOrEmpty) {
+        return Objects.isNull(nullOrEmpty) || nullOrEmpty.isEmpty();
     }
 
     private String getProperty(String key) {
