@@ -51,18 +51,18 @@ Property values should be configured as necessary. The SPI will then load them o
 
 ### Configuration
 
-The following configuration parameters can (and in some cases must) be provided in the SPI properties
+The following configuration parameters can (and in some cases must) be provided as environmental variables
 
 | Parameter            | Required | Default value | Description |
 | -------------------- | -------- | ------------- | ----------- |
-| `realmId`            | yes      | -             | Identifier of the realm for which events should be processed. |
-| `graphDBServerUrl`   | yes      | -             | URL of the GraphDB server on which user accounts corresponding to keycloak accounts need to be created. |
-| `repositoryId`       | yes      | -             | Identifier of the repository into which basic user metadata should be replicated by this SPI. Repository URL will be resolved based on GraphDB server URL and this id. |
-| `repositoryUsername` | no       | -             | Username to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
-| `repositoryPassword` | no       | -             | Password to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
-| `language`           | no       | `en`          | Language tag with which String-based user account metadata will be saved in to the triple store repository. |
-| `context`            | no       | -             | Identifier of named graph into which user account metadata will be saved. |
-| `namespace`          | no       | `http://onto.fel.cvut.cz/ontologies/uzivatel/` | Namespace for generating user identifiers. |
+| `COMPONENTS`         | no       | -             | Base64 encoded configuration of DB_SERVER_REPOSITORY_ID, DB_SERVER_URL and REALM_ID through common assembly line configuration|
+| `REALM_ID`           | yes      | -             | Identifier of the realm for which events should be processed. |
+| `DB_SERVER_URL`      | yes      | -             | URL of the GraphDB server on which user accounts corresponding to keycloak accounts need to be created. |
+| `DB_SERVER_REPOSITORY_ID`| yes      | -             | Identifier of the repository into which basic user metadata should be replicated by this SPI. Repository URL will be resolved based on GraphDB server URL and this id. |
+| `REPOSITORY_USERNAME`| no       | -             | Username to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
+| `REPOSITORY_PASSWORD`| no       | -             | Password to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
+| `DB_SERVER_CONTEXT`  | no       | -             | Identifier of named graph into which user account metadata will be saved. |
+| `NAMESPACE`          | no       | `http://onto.fel.cvut.cz/ontologies/uzivatel/` | Namespace for generating user identifiers. |
 
 Note that the GraphDB user (identifier by `repositoryUsername` and `repositoryPassword`) has to be an admin, 
 so that it can add new users into the user database.

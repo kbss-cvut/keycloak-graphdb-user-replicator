@@ -1,6 +1,5 @@
 package cz.cvut.kbss.keycloak.provider;
 
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import org.eclipse.rdf4j.repository.Repository;
 import org.keycloak.Config;
 import org.keycloak.events.EventListenerProvider;
@@ -26,15 +25,13 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
         }
         return new DataReplicationProvider(
                 new KeycloakAdapter(keycloakSession.users(), keycloakSession.realms(), configuration),
-                new UserAccountDao(repository.getConnection(), configuration.getLanguage()),
+                new UserAccountDao(repository.getConnection()),
                 new GraphDBUserDao(configuration));
     }
 
     @Override
     public void init(Config.Scope scope) {
         LOG.debug("Loading configuration from scope.");
-        KodiUserAccount.setNamespace(scope.get("namespace"));
-        KodiUserAccount.setContext(scope.get("context"));
         this.configuration = new Configuration(scope);
     }
 

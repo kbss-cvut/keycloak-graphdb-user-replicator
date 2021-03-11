@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
@@ -16,27 +17,35 @@ public class Configuration {
 
     private final String repositoryPassword;
 
-    private final String language;
-
     private final String graphDBServerUrl;
 
     Configuration(Config.Scope scope) {
         final String components = getProperty("COMPONENTS");
-        if (components == null) {
-            throw new RuntimeException("Environmental variable 'COMPONENTS' must be set.");
+        if (isNullOrEmpty(getProperty("DB_SERVER_URL"))
+            || isNullOrEmpty(getProperty("DB_SERVER_REPOSITORY_ID"))
+            || isNullOrEmpty(getProperty("REALM_ID"))) {
+            if (components == null) {
+                throw new RuntimeException("Environmental variable 'COMPONENTS' "
+                    + "or DB_SERVER_URL and DB_SERVER_REPOSITORY_ID must be set.");
+            }
+            final Map<String, Object> dbServer =
+                (Map<String, Object>) parseComponents(components).get("dbServer");
+            final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
+            this.graphDBServerUrl = parser.getGraphdbUrl();
+            this.repositoryId = parser.getRepositoryId();
+            final Map<String, Object> authServer =
+                (Map<String, Object>) parseComponents(components).get("authServer");
+            final AuthServerParser aParser = new AuthServerParser(authServer.get("url").toString());
+            this.realmId = aParser.getRealmId();
+        } else {
+            this.graphDBServerUrl = getProperty("DB_SERVER_URL");
+            this.repositoryId = getProperty("DB_SERVER_REPOSITORY_ID");
+            this.realmId = getProperty("REALM_ID");
         }
-        final Map<String, Object> dbServer =
-            (Map<String, Object>) parseComponents(components).get("dbServer");
-        final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
-
-        this.realmId = getProperty("REALM_ID");
-        this.graphDBServerUrl = isNullOrEmpty(getProperty("DB_SERVER_URL")) ? parser.getGraphdbUrl() : getProperty("DB_SERVER_URL");
-        this.repositoryId = isNullOrEmpty(getProperty("DB_SERVER_REPOSITORY_ID")) ? parser.getRepositoryId() : getProperty("DB_SERVER_REPOSITORY_ID");
         this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
         this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
-        this.language = getProperty("language") != null ? getProperty("language") : "en";
-        // TODO this.context = getProperty("CONTEXT");
-        // TODO this.namespace = getProperty("NAMESPACE");
+        KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
+        KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
     }
 
     private boolean isNullOrEmpty(final String nullOrEmpty) {
@@ -66,10 +75,6 @@ public class Configuration {
 
     public String getRepositoryPassword() {
         return repositoryPassword;
-    }
-
-    public String getLanguage() {
-        return language;
     }
 
     public String getGraphDBServerUrl() {
