@@ -14,30 +14,40 @@ public class UserAccountDao {
 
     private final RepositoryConnection connection;
 
-    private final String language;
-
-    public UserAccountDao(RepositoryConnection connection, String language) {
+    public UserAccountDao(RepositoryConnection connection) {
         this.connection = connection;
-        this.language = language;
         this.vf = connection.getValueFactory();
     }
 
     public void persist(KodiUserAccount userAccount) {
         Objects.requireNonNull(userAccount);
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
-        connection.add(subject, RDF.TYPE, vf.createIRI(Vocabulary.s_i_uzivatel),
+        if (Objects.isNull(KodiUserAccount.getContext()) || KodiUserAccount.getContext()
+            .isEmpty()) {
+            connection.add(subject, RDF.TYPE, vf.createIRI(Vocabulary.s_i_uzivatel));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
+                vf.createLiteral(userAccount.getFirstName()));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
+                vf.createLiteral(userAccount.getLastName()));
+        } else {
+            connection.add(subject, RDF.TYPE, vf.createIRI(Vocabulary.s_i_uzivatel),
                 vf.createIRI(KodiUserAccount.getContext()));
-        connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
-                vf.createLiteral(userAccount.getFirstName(), language), vf.createIRI(KodiUserAccount.getContext()));
-        connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
-                vf.createLiteral(userAccount.getLastName(), language), vf.createIRI(KodiUserAccount.getContext()));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
+                vf.createLiteral(userAccount.getFirstName()),
+                vf.createIRI(KodiUserAccount.getContext()));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
+                vf.createLiteral(userAccount.getLastName()),
+                vf.createIRI(KodiUserAccount.getContext()));
+        }
     }
 
     public void update(KodiUserAccount userAccount) {
         Objects.requireNonNull(userAccount);
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
-        connection.remove(connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno), null));
-        connection.remove(connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni), null));
+        connection.remove(
+            connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno), null));
+        connection.remove(
+            connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni), null));
         persist(userAccount);
     }
 
