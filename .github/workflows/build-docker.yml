@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 env:
-  IMAGE_NAME: al-keycloak
+  IMAGE_NAME: al-auth-server
 jobs:
   build:
     runs-on: ubuntu-latest
