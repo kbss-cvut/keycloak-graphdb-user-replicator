@@ -2,7 +2,7 @@ FROM jboss/keycloak
 
 USER jboss
 
-ARG DEPLOY_PATH=modelujeme\/sluzby\/authServer
+ARG DEPLOY_PATH=modelujeme\/sluzby\/al-auth-server
 
 ENV KEYCLOAK_HOME=/opt/jboss/keycloak
 ADD target/keycloak-graphdb-user-replicator.jar $KEYCLOAK_HOME/standalone/deployments/

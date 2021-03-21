@@ -29,12 +29,12 @@ public class Configuration {
                     + "or DB_SERVER_URL and DB_SERVER_REPOSITORY_ID must be set.");
             }
             final Map<String, Object> dbServer =
-                (Map<String, Object>) parseComponents(components).get("dbServer");
+                (Map<String, Object>) parseComponents(components).get("al-db-server");
             final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
             this.graphDBServerUrl = parser.getGraphdbUrl();
             this.repositoryId = parser.getRepositoryId();
             final Map<String, Object> authServer =
-                (Map<String, Object>) parseComponents(components).get("authServer");
+                (Map<String, Object>) parseComponents(components).get("al-auth-server");
             final AuthServerParser aParser = new AuthServerParser(authServer.get("url").toString());
             this.realmId = aParser.getRealmId();
         } else {
