@@ -1,9 +1,17 @@
 # Keycloak GraphDB User Replicator 
-[![Build docker](https://github.com/opendata-mvcr/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml/badge.svg)](https://github.com/opendata-mvcr/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml)
+[![Build docker](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml/badge.svg)](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml)
 
 Ensures user data are replicated into a GraphDB instance for the purpose of data provenance display. Another feature is
 creating GraphDB users corresponding to Keycloak users so that applications authenticated via Keycloak can access
 protected GraphDB repositories.
+
+## Compatibility
+
+This service provider is compatible with Keycloak 18 and later. Previous versions were powered by JBoss and had a different
+directory structure as well as means of deploying service providers. Since version 18, Keycloak is powered by Quarkus.
+
+This service provider is also compatible with GraphDB 10 and later. Previous GraphDB versions used RDF4J 3, GraphDB 10 uses
+RDF4J 4 which is not compatible with the previous version due to changes in the binary repository connection protocol.
 
 ## Implementation notes
 
@@ -31,38 +39,25 @@ If needed, a regular sweep of obsolete user accounts can be done in GraphDB.
 ## Setup
 
 1. Build project
-2. Add the following XML snippet into `$KEYCLOAK_HOME/standalone/configuration/standalone.xml` under the tag
-   `<subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">`
-
-```xml
-
-<spi name="eventsListener">
-    <provider name="keycloak-graphdb-user-replicator" enabled="true">
-        <properties>
-            <property name="${property}" value="${value}"/>
-        </properties>
-    </provider>
-</spi>
-```
-
-Property values should be configured as necessary. The SPI will then load them on startup.
-
-3. Copy target JAR into `$KEYCLOAK_HOME/standalone/deployments`
+2. Copy target JAR into `$KEYCLOAK_HOME/providers`
+3. Provide required configuration (see below) using [one of the supported ways](https://www.keycloak.org/server/configuration).
+4. Start Keycloak
+5. Go to the `Realm settings` of the relevant realm, open the `Events` tab and add `keycloak-graphdb-user-replicator` to the `Event listeners`
 
 ### Configuration
 
 The following configuration parameters can (and in some cases must) be provided as environmental variables
 
-| Parameter            | Required | Default value | Description |
-| -------------------- | -------- | ------------- | ----------- |
-| `COMPONENTS`         | no       | -             | Base64 encoded configuration of DB_SERVER_REPOSITORY_ID, DB_SERVER_URL and REALM_ID through common assembly line configuration|
-| `REALM_ID`           | yes      | -             | Identifier of the realm for which events should be processed. |
-| `DB_SERVER_URL`      | yes      | -             | URL of the GraphDB server on which user accounts corresponding to keycloak accounts need to be created. |
-| `DB_SERVER_REPOSITORY_ID`| yes      | -             | Identifier of the repository into which basic user metadata should be replicated by this SPI. Repository URL will be resolved based on GraphDB server URL and this id. |
-| `REPOSITORY_USERNAME`| no       | -             | Username to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
-| `REPOSITORY_PASSWORD`| no       | -             | Password to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database. |
-| `DB_SERVER_CONTEXT`  | no       | -             | Identifier of named graph into which user account metadata will be saved. |
-| `NAMESPACE`          | no       | `http://onto.fel.cvut.cz/ontologies/uzivatel/` | Namespace for generating user identifiers. |
+| Parameter                 | Required | Default value                                  | Description                                                                                                                                                            |
+|---------------------------|----------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `COMPONENTS`              | no       | -                                              | Base64 encoded configuration of DB_SERVER_REPOSITORY_ID, DB_SERVER_URL and REALM_ID through common assembly line configuration.                                        |
+| `REALM_ID`                | yes      | -                                              | Identifier of the realm for which events should be processed.                                                                                                          |
+| `DB_SERVER_URL`           | yes      | -                                              | URL of the GraphDB server on which user accounts corresponding to keycloak accounts need to be created.                                                                |
+| `DB_SERVER_REPOSITORY_ID` | yes      | -                                              | Identifier of the repository into which basic user metadata should be replicated by this SPI. Repository URL will be resolved based on GraphDB server URL and this id. |
+| `REPOSITORY_USERNAME`     | no       | -                                              | Username to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database.                                      |
+| `REPOSITORY_PASSWORD`     | no       | -                                              | Password to authenticate with when replicating user metadata into the triple store repository and into the GraphDB user database.                                      |
+| `DB_SERVER_CONTEXT`       | no       | -                                              | Identifier of named graph into which user account metadata will be saved.                                                                                              |
+| `NAMESPACE`               | no       | `http://onto.fel.cvut.cz/ontologies/uzivatel/` | Namespace for generating user identifiers.                                                                                                                             |
 
 Note that the GraphDB user (identifier by `repositoryUsername` and `repositoryPassword`) has to be an admin, 
 so that it can add new users into the user database.
