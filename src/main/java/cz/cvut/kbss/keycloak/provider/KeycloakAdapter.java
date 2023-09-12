@@ -21,11 +21,11 @@ public class KeycloakAdapter {
     }
 
     public boolean isDifferentRealm(String realmId) {
-        return !Objects.equals(configuration.getRealmId(), realmId);
+        return !Objects.equals(realmProvider.getRealmByName(configuration.getRealmId()).getId(), realmId);
     }
 
     public KodiUserAccount getUser(String userId, String realmId) {
-        final UserModel userModel = userProvider.getUserById(userId, realmProvider.getRealm(realmId));
+        final UserModel userModel = userProvider.getUserById(realmProvider.getRealm(realmId), userId);
         return userModel != null ? new KodiUserAccount(userModel) : null;
     }
 }

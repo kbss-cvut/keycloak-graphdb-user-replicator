@@ -1,19 +1,21 @@
-FROM jboss/keycloak
+FROM maven:3-eclipse-temurin-17 as provider-builder
 
-USER jboss
+COPY pom.xml pom.xml
 
-ARG DEPLOY_PATH=modelujeme\/sluzby\/auth-server
+RUN mvn -B de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
 
-ENV KEYCLOAK_HOME=/opt/jboss/keycloak
-ADD target/keycloak-graphdb-user-replicator.jar $KEYCLOAK_HOME/standalone/deployments/
-ENV STANDALONE_XML=$KEYCLOAK_HOME/standalone/configuration/standalone.xml
-ENV STANDALONE_HA_XML=$KEYCLOAK_HOME/standalone/configuration/standalone-ha.xml
-ENV DOMAIN_XML=$KEYCLOAK_HOME/domain/configuration/domain.xml
-RUN sed -i -e "s!<web-context>auth<\/web-context>!<web-context>${DEPLOY_PATH}<\/web-context>!" $STANDALONE_XML
-RUN sed -i -e "s!<web-context>auth<\/web-context>!<web-context>${DEPLOY_PATH}<\/web-context>!" $STANDALONE_HA_XML
-RUN sed -i -e "s!<web-context>auth<\/web-context>!<web-context>${DEPLOY_PATH}<\/web-context>!" $DOMAIN_XML
+COPY src src
 
-WORKDIR keycloak-config
-ADD spi.xml /
-ENV PLACE='<subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">'
-RUN SPI=`cat /spi.xml | tr -d '\n'` ; sed -i "s~$PLACE~$PLACE$SPI~g" $STANDALONE_XML
+RUN mvn package -B
+
+FROM quay.io/keycloak/keycloak:22.0 as kc-builder
+
+ENV KEYCLOAK_HOME=/opt/keycloak
+COPY --from=provider-builder target/keycloak-graphdb-user-replicator.jar ${KEYCLOAK_HOME}/providers/
+RUN ${KEYCLOAK_HOME}/bin/kc.sh build
+
+FROM quay.io/keycloak/keycloak:22.0
+
+COPY --from=kc-builder /opt/keycloak /opt/keycloak
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]

@@ -63,7 +63,9 @@ public class KodiUserAccount {
     }
 
     public static void setNamespace(String namespace) {
-        KodiUserAccount.namespace = namespace;
+        if (namespace != null) {
+            KodiUserAccount.namespace = namespace;
+        }
     }
 
     public static void setContext(String context) {

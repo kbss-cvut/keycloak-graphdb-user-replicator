@@ -19,6 +19,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     @Override
     public EventListenerProvider create(KeycloakSession keycloakSession) {
+        LOG.info("Creating EventListenerProvider.");
         if (repository == null) {
             // Init persistence factory lazily, because GraphDB won't start until its OIDC provider (Keycloak) is available
             this.repository = PersistenceFactory.connect(configuration);
@@ -31,7 +32,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     @Override
     public void init(Config.Scope scope) {
-        LOG.debug("Loading configuration from scope.");
+        LOG.info("Loading configuration from scope.");
         this.configuration = new Configuration(scope);
     }
 
@@ -41,7 +42,9 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     @Override
     public void close() {
-        repository.shutDown();
+        if (repository != null) {
+            repository.shutDown();
+        }
     }
 
     @Override

@@ -24,7 +24,7 @@ public class GraphDBUserDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphDBUserDao.class);
 
-    private static final String USER_MANAGEMENT_PATH = "rest/security/user/";
+    private static final String USER_MANAGEMENT_PATH = "rest/security/users/";
     private static final String JSON_MIME_TYPE = "application/json";
 
     private final Configuration configuration;

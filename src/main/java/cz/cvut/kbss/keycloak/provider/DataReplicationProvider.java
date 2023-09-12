@@ -4,6 +4,7 @@ import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.admin.AdminEvent;
+import org.keycloak.events.admin.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     @Override
     public void onEvent(Event event) {
+        LOG.trace("User event caught. Event type: {}", event.getType());
         if (keycloakAdapter.isDifferentRealm(event.getRealmId())) {
             return;
         }
@@ -87,12 +89,18 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     @Override
     public void onEvent(AdminEvent event, boolean includeRepresentation) {
+        LOG.trace("Admin event caught. Event type: {}", event.getOperationType());
         if (keycloakAdapter.isDifferentRealm(event.getRealmId())) {
             return;
         }
         switch (event.getOperationType()) {
             case CREATE:
-                newUser(resolveUser(event));
+                if (event.getResourceType() == ResourceType.REALM_ROLE_MAPPING) {
+                    // We are not interested in role mapping changes
+                    break;
+                } else {
+                    newUser(resolveUser(event));
+                }
                 break;
             case UPDATE:
                 updateUser(resolveUser(event));
@@ -104,7 +112,9 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private KodiUserAccount resolveUser(AdminEvent event) {
         final String resourceUri = event.getResourcePath();
-        final String userId = resourceUri.substring(resourceUri.lastIndexOf('/') + 1);
+        final String userIdPath = resourceUri.substring(resourceUri.lastIndexOf("users/") + 6);
+        final int slashIndex = userIdPath.indexOf('/');
+        final String userId = userIdPath.substring(0, slashIndex > 0 ? slashIndex : userIdPath.length());
         return getUser(userId, event.getRealmId());
     }
 
