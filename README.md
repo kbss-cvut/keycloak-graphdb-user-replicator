@@ -1,5 +1,5 @@
 # Keycloak GraphDB User Replicator 
-[![Build docker](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml/badge.svg)](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/docker-build-and-upload.yml)
+[![Build docker](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml/badge.svg)](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml)
 
 Ensures user data are replicated into a GraphDB instance for the purpose of data provenance display. Another feature is
 creating GraphDB users corresponding to Keycloak users so that applications authenticated via Keycloak can access
