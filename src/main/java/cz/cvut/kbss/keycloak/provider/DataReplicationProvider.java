@@ -89,21 +89,21 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     @Override
     public void onEvent(AdminEvent event, boolean includeRepresentation) {
-        LOG.trace("Admin event caught. Event type: {}", event.getOperationType());
+        LOG.trace("Admin event caught. Event type: {}, resource type: {}", event.getOperationType(),
+                  event.getResourceType());
         if (keycloakAdapter.isDifferentRealm(event.getRealmId())) {
             return;
         }
         switch (event.getOperationType()) {
             case CREATE:
-                if (event.getResourceType() == ResourceType.REALM_ROLE_MAPPING) {
-                    // We are not interested in role mapping changes
-                    break;
-                } else {
+                if (event.getResourceType() == ResourceType.USER) {
                     newUser(resolveUser(event));
                 }
                 break;
             case UPDATE:
-                updateUser(resolveUser(event));
+                if (event.getResourceType() == ResourceType.USER) {
+                    updateUser(resolveUser(event));
+                }
                 break;
             default:
                 break;
