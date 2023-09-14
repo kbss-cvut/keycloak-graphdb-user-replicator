@@ -69,8 +69,10 @@ public class DataReplicationProvider implements EventListenerProvider {
     }
 
     private void addGraphDBUser(KodiUserAccount userAccount) {
-        LOG.info("Adding user account to GraphDB use database.");
-        graphDBUserDao.addUser(userAccount);
+        if (keycloakAdapter.shouldAddAccounts()) {
+            LOG.info("Adding user account to GraphDB user database.");
+            graphDBUserDao.addUser(userAccount);
+        }
     }
 
     private void updateUser(KodiUserAccount userAccount) {

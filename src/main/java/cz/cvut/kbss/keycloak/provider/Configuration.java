@@ -19,6 +19,8 @@ public class Configuration {
 
     private final String graphDBServerUrl;
 
+    private final boolean addAccounts;
+
     Configuration(Config.Scope scope) {
         final String components = getProperty("COMPONENTS");
         if (isNullOrEmpty(getProperty("DB_SERVER_URL"))
@@ -44,21 +46,27 @@ public class Configuration {
         }
         this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
         this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
+        this.addAccounts = getBooleanProperty("ADD_ACCOUNTS", true);
         KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
         KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
     }
 
-    private boolean isNullOrEmpty(final String nullOrEmpty) {
+    private static boolean isNullOrEmpty(final String nullOrEmpty) {
         return Objects.isNull(nullOrEmpty) || nullOrEmpty.isEmpty();
     }
 
-    private String getProperty(String key) {
+    private static String getProperty(String key) {
         return System.getenv(key);
     }
 
-    private Map<String, Object> parseComponents(String components) {
+    private static Map<String, Object> parseComponents(String components) {
         final String componentsDecoded = new String(Base64.getDecoder().decode(components));
         return new Yaml().load(componentsDecoded);
+    }
+
+    private static boolean getBooleanProperty(String key, boolean defaultValue) {
+        final String value = getProperty(key);
+        return isNullOrEmpty(value) ? defaultValue : Boolean.parseBoolean(value);
     }
 
     public String getRealmId() {
@@ -79,5 +87,9 @@ public class Configuration {
 
     public String getGraphDBServerUrl() {
         return graphDBServerUrl;
+    }
+
+    public boolean shouldAddAccounts() {
+        return addAccounts;
     }
 }

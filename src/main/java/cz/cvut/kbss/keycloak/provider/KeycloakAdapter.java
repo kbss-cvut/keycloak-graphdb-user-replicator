@@ -28,4 +28,8 @@ public class KeycloakAdapter {
         final UserModel userModel = userProvider.getUserById(realmProvider.getRealm(realmId), userId);
         return userModel != null ? new KodiUserAccount(userModel) : null;
     }
+
+    public boolean shouldAddAccounts() {
+        return configuration.shouldAddAccounts();
+    }
 }
