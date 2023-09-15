@@ -1,5 +1,5 @@
 # Keycloak GraphDB User Replicator 
-[![Build docker](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml/badge.svg)](https://github.com/datagov-cz/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml)
+[![Build docker](https://github.com/kbss-cvut/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml/badge.svg)](https://github.com/kbss-cvut/keycloak-graphdb-user-replicator/actions/workflows/build-docker.yml)
 
 Replicates basic user data from Keycloak into a GraphDB repository for the purpose of data provenance display. 
 Another (optional) feature is creating GraphDB users corresponding to Keycloak users so that applications authenticated 
@@ -27,7 +27,7 @@ so that Keycloak authenticated users can access protected GraphDB repositories. 
    only via Keycloak.
    
 2. When a user account is updated, corresponding user metadata are updated in the configured GraphDB repository. If the user's email
-has changed, a new matching user account is created in the GraphDB user database as well (if this feature is eanbled).
+has changed, a new matching user account is created in the GraphDB user database as well (if this feature is enabled).
    
 Note that due to the nature of the Keycloak events received by the SPI, it is not possible to update or remove GraphDB users. The
 original user email is not available in the event, so the corresponding GraphDB user cannot be found and disposed of. However, since
@@ -38,11 +38,20 @@ If needed, a regular sweep of obsolete user accounts can be done in GraphDB.
 
 ## Setup
 
+To use the plugin directly in a Keycloak instance, follow these steps:
+
 1. Build project
 2. Copy target JAR into `$KEYCLOAK_HOME/providers`
 3. Provide required configuration (see below) using [one of the supported ways](https://www.keycloak.org/server/configuration).
 4. Start Keycloak
 5. Go to the `Realm settings` of the relevant realm, open the `Events` tab and add `keycloak-graphdb-user-replicator` to the `Event listeners`
+
+In a containerized environment, you can use the Docker image which includes Keycloak and this plugin:
+
+1. Use the Docker image `ghcr.io/kbss-cvut/keycloak-graphdb-user-replicator/keycloak-graphdb:latest`
+2. Provide required configuration (see below) using [one of the supported ways](https://www.keycloak.org/server/configuration).
+3. Start the container/service
+4. Go to the `Realm settings` of the relevant realm, open the `Events` tab and add `keycloak-graphdb-user-replicator` to the `Event listeners`
 
 ### Configuration
 
