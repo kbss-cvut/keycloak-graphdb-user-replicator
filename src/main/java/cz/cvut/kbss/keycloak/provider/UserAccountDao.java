@@ -23,21 +23,25 @@ public class UserAccountDao {
         Objects.requireNonNull(userAccount);
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
         if (Objects.isNull(KodiUserAccount.getContext()) || KodiUserAccount.getContext()
-            .isEmpty()) {
+                                                                           .isEmpty()) {
             connection.add(subject, RDF.TYPE, vf.createIRI(KodiUserAccount.getType()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
-                vf.createLiteral(userAccount.getFirstName()));
+                           vf.createLiteral(userAccount.getFirstName()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
-                vf.createLiteral(userAccount.getLastName()));
+                           vf.createLiteral(userAccount.getLastName()));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_uzivatelske_jmeno),
+                           vf.createLiteral(userAccount.getUsername()));
         } else {
             connection.add(subject, RDF.TYPE, vf.createIRI(KodiUserAccount.getType()),
-                vf.createIRI(KodiUserAccount.getContext()));
+                           vf.createIRI(KodiUserAccount.getContext()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
-                vf.createLiteral(userAccount.getFirstName()),
-                vf.createIRI(KodiUserAccount.getContext()));
+                           vf.createLiteral(userAccount.getFirstName()),
+                           vf.createIRI(KodiUserAccount.getContext()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
-                vf.createLiteral(userAccount.getLastName()),
-                vf.createIRI(KodiUserAccount.getContext()));
+                           vf.createLiteral(userAccount.getLastName()),
+                           vf.createIRI(KodiUserAccount.getContext()));
+            connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_uzivatelske_jmeno),
+                           vf.createLiteral(userAccount.getUsername()), vf.createIRI(KodiUserAccount.getContext()));
         }
     }
 
@@ -45,9 +49,11 @@ public class UserAccountDao {
         Objects.requireNonNull(userAccount);
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
         connection.remove(
-            connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno), null));
+                connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno), null));
         connection.remove(
-            connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni), null));
+                connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni), null));
+        connection.remove(
+                connection.getStatements(subject, vf.createIRI(Vocabulary.s_i_ma_uzivatelske_jmeno), null));
         persist(userAccount);
     }
 
