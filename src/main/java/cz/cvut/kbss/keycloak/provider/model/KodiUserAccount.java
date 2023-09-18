@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider.model;
 
+import cz.cvut.kbss.keycloak.provider.Vocabulary;
 import org.keycloak.models.UserModel;
 
 import java.net.URI;
@@ -10,6 +11,8 @@ public class KodiUserAccount {
     private static String namespace = "http://onto.fel.cvut.cz/ontologies/uzivatel/";
 
     private static String context = null;
+
+    private static String type = Vocabulary.s_i_uzivatel;
 
     private URI uri;
 
@@ -74,6 +77,16 @@ public class KodiUserAccount {
 
     public static String getContext() {
         return context;
+    }
+
+    public static void setType(String type) {
+        if (type != null) {
+            KodiUserAccount.type = type;
+        }
+    }
+
+    public static String getType() {
+        return type;
     }
 
     @Override

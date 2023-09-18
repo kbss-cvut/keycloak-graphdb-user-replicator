@@ -49,6 +49,7 @@ public class Configuration {
         this.addAccounts = getBooleanProperty("ADD_ACCOUNTS", true);
         KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
         KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
+        KodiUserAccount.setType(getProperty("USER_TYPE"));
     }
 
     private static boolean isNullOrEmpty(final String nullOrEmpty) {

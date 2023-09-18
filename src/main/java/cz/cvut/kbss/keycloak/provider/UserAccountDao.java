@@ -24,13 +24,13 @@ public class UserAccountDao {
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
         if (Objects.isNull(KodiUserAccount.getContext()) || KodiUserAccount.getContext()
             .isEmpty()) {
-            connection.add(subject, RDF.TYPE, vf.createIRI(Vocabulary.s_i_uzivatel));
+            connection.add(subject, RDF.TYPE, vf.createIRI(KodiUserAccount.getType()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
                 vf.createLiteral(userAccount.getFirstName()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_prijmeni),
                 vf.createLiteral(userAccount.getLastName()));
         } else {
-            connection.add(subject, RDF.TYPE, vf.createIRI(Vocabulary.s_i_uzivatel),
+            connection.add(subject, RDF.TYPE, vf.createIRI(KodiUserAccount.getType()),
                 vf.createIRI(KodiUserAccount.getContext()));
             connection.add(subject, vf.createIRI(Vocabulary.s_i_ma_krestni_jmeno),
                 vf.createLiteral(userAccount.getFirstName()),
