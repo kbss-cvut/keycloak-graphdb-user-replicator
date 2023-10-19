@@ -18,8 +18,6 @@ public class GraphDbUrlParserTest {
     @Test
     public void throwsExceptionOnNonGraphDbRepositoryUrl() {
         final String sparqlEndpointUrl = "https://localhost/služby/kodi";
-        assertThrows(RuntimeException.class, () -> {
-            new GraphDbUrlParser(sparqlEndpointUrl);
-        });
+        assertThrows(RuntimeException.class, () -> new GraphDbUrlParser(sparqlEndpointUrl));
     }
 }

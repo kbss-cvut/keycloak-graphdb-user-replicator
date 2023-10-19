@@ -1,5 +1,7 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import cz.cvut.kbss.keycloak.provider.dao.GraphDBUserDao;
+import cz.cvut.kbss.keycloak.provider.dao.UserAccountDao;
 import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;

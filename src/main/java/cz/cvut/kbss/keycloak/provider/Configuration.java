@@ -4,6 +4,9 @@ import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
+import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.keycloak.Config;
 import org.yaml.snakeyaml.Yaml;
 
@@ -18,6 +21,8 @@ public class Configuration {
     private final String repositoryPassword;
 
     private final String graphDBServerUrl;
+
+    private final Vocabulary vocabulary;
 
     private final boolean addAccounts;
 
@@ -49,7 +54,7 @@ public class Configuration {
         this.addAccounts = getBooleanProperty("ADD_ACCOUNTS", true);
         KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
         KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
-        KodiUserAccount.setType(getProperty("USER_TYPE"));
+        this.vocabulary = initVocabulary();
     }
 
     private static boolean isNullOrEmpty(final String nullOrEmpty) {
@@ -60,14 +65,28 @@ public class Configuration {
         return System.getenv(key);
     }
 
+    private static Optional<String> getOptionalProperty(String key) {
+        return Optional.ofNullable(System.getenv(key));
+    }
+
     private static Map<String, Object> parseComponents(String components) {
         final String componentsDecoded = new String(Base64.getDecoder().decode(components));
         return new Yaml().load(componentsDecoded);
     }
 
     private static boolean getBooleanProperty(String key, boolean defaultValue) {
-        final String value = getProperty(key);
-        return isNullOrEmpty(value) ? defaultValue : Boolean.parseBoolean(value);
+        final Optional<String> value = getOptionalProperty(key);
+        return value.map(Boolean::parseBoolean).orElse(defaultValue);
+    }
+
+    private static Vocabulary initVocabulary() {
+        final Vocabulary vocabulary = new Vocabulary();
+        getOptionalProperty("VOCABULARY_USER_TYPE").ifPresent(vocabulary::setType);
+        getOptionalProperty("VOCABULARY_USER_FIRST_NAME").ifPresent(vocabulary::setFirstName);
+        getOptionalProperty("VOCABULARY_USER_LAST_NAME").ifPresent(vocabulary::setLastName);
+        getOptionalProperty("VOCABULARY_USER_USERNAME").ifPresent(vocabulary::setUsername);
+        getOptionalProperty("VOCABULARY_USER_EMAIL").ifPresent(vocabulary::setEmail);
+        return vocabulary;
     }
 
     public String getRealmId() {
@@ -92,5 +111,9 @@ public class Configuration {
 
     public boolean shouldAddAccounts() {
         return addAccounts;
+    }
+
+    public Vocabulary getVocabulary() {
+        return vocabulary;
     }
 }

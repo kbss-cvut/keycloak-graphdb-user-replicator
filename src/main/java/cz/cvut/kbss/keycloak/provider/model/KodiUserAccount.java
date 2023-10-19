@@ -1,6 +1,5 @@
 package cz.cvut.kbss.keycloak.provider.model;
 
-import cz.cvut.kbss.keycloak.provider.Vocabulary;
 import org.keycloak.models.UserModel;
 
 import java.net.URI;
@@ -12,8 +11,6 @@ public class KodiUserAccount {
 
     private static String context = null;
 
-    private static String type = Vocabulary.s_i_uzivatel;
-
     private URI uri;
 
     private String firstName;
@@ -21,6 +18,8 @@ public class KodiUserAccount {
     private String lastName;
 
     private String username;
+
+    private String email;
 
     public KodiUserAccount() {
     }
@@ -31,6 +30,7 @@ public class KodiUserAccount {
         this.firstName = userModel.getFirstName();
         this.lastName = userModel.getLastName();
         this.username = userModel.getUsername();
+        this.email = userModel.getEmail();
     }
 
     public URI getUri() {
@@ -65,6 +65,14 @@ public class KodiUserAccount {
         this.username = username;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public static void setNamespace(String namespace) {
         if (namespace != null) {
             KodiUserAccount.namespace = namespace;
@@ -77,16 +85,6 @@ public class KodiUserAccount {
 
     public static String getContext() {
         return context;
-    }
-
-    public static void setType(String type) {
-        if (type != null) {
-            KodiUserAccount.type = type;
-        }
-    }
-
-    public static String getType() {
-        return type;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package cz.cvut.kbss.keycloak.provider;
 
+import cz.cvut.kbss.keycloak.provider.dao.GraphDBUserDao;
+import cz.cvut.kbss.keycloak.provider.dao.UserAccountDao;
 import org.eclipse.rdf4j.repository.Repository;
 import org.keycloak.Config;
 import org.keycloak.events.EventListenerProvider;
@@ -26,7 +28,7 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
         }
         return new DataReplicationProvider(
                 new KeycloakAdapter(keycloakSession.users(), keycloakSession.realms(), configuration),
-                new UserAccountDao(repository.getConnection()),
+                new UserAccountDao(repository.getConnection(), configuration.getVocabulary()),
                 new GraphDBUserDao(configuration));
     }
 

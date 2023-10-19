@@ -1,6 +1,7 @@
-package cz.cvut.kbss.keycloak.provider;
+package cz.cvut.kbss.keycloak.provider.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.cvut.kbss.keycloak.provider.Configuration;
 import cz.cvut.kbss.keycloak.provider.exception.GraphDBConnectionException;
 import cz.cvut.kbss.keycloak.provider.model.GraphDBUserDto;
 import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
