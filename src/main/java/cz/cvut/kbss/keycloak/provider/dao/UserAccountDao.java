@@ -49,7 +49,7 @@ public class UserAccountDao {
                                    vf.createLiteral(userAccount.getUsername()))
         ));
         if (vocabulary.getEmail() != null) {
-            statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()), vf.createIRI(userAccount.getEmail())));
+            statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(userAccount.getEmail())));
         }
         return statements;
     }
