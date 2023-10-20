@@ -66,7 +66,7 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private void newUser(KodiUserAccount userAccount) {
         LOG.info("Generating new user metadata into triple store for user {}", userAccount);
-        userAccountDao.transactional(() -> userAccountDao.persist(userAccount));
+        userAccountDao.persist(userAccount);
         addGraphDBUser(userAccount);
     }
 
@@ -79,7 +79,7 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     private void updateUser(KodiUserAccount userAccount) {
         LOG.info("Updating metadata of user {} in triple store", userAccount);
-        userAccountDao.transactional(() -> userAccountDao.update(userAccount));
+        userAccountDao.update(userAccount);
         addGraphDBUser(userAccount);
     }
 

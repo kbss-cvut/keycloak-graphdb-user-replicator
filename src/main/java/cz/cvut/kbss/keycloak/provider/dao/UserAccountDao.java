@@ -29,6 +29,12 @@ public class UserAccountDao {
 
     public void persist(KodiUserAccount userAccount) {
         Objects.requireNonNull(userAccount);
+        connection.begin();
+        persistInTransaction(userAccount);
+        connection.commit();
+    }
+
+    private void persistInTransaction(KodiUserAccount userAccount) {
         if (Objects.isNull(KodiUserAccount.getContext()) || KodiUserAccount.getContext().isEmpty()) {
             generateUserMetadataStatements(userAccount).forEach(connection::add);
         } else {
@@ -49,28 +55,23 @@ public class UserAccountDao {
                                    vf.createLiteral(userAccount.getUsername()))
         ));
         if (vocabulary.getEmail() != null) {
-            statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(userAccount.getEmail())));
+            statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()),
+                                              vf.createLiteral(userAccount.getEmail())));
         }
         return statements;
     }
 
     public void update(KodiUserAccount userAccount) {
         Objects.requireNonNull(userAccount);
-        final IRI subject = vf.createIRI(userAccount.getUri().toString());
-        connection.remove(
-                connection.getStatements(subject, vf.createIRI(vocabulary.getFirstName()), null));
-        connection.remove(
-                connection.getStatements(subject, vf.createIRI(vocabulary.getLastName()), null));
-        connection.remove(
-                connection.getStatements(subject, vf.createIRI(vocabulary.getUsername()), null));
-        connection.remove(
-                connection.getStatements(subject, vf.createIRI(vocabulary.getEmail()), null));
-        persist(userAccount);
-    }
-
-    public void transactional(Runnable procedure) {
         connection.begin();
-        procedure.run();
+        final IRI subject = vf.createIRI(userAccount.getUri().toString());
+        connection.remove(subject, vf.createIRI(vocabulary.getFirstName()), null);
+        connection.remove(subject, vf.createIRI(vocabulary.getLastName()), null);
+        connection.remove(subject, vf.createIRI(vocabulary.getUsername()), null);
+        if (vocabulary.getEmail() != null) {
+            connection.remove(subject, vf.createIRI(vocabulary.getEmail()), null);
+        }
+        persistInTransaction(userAccount);
         connection.commit();
     }
 

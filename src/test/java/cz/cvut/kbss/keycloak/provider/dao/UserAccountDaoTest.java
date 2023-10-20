@@ -47,8 +47,12 @@ class UserAccountDaoTest {
     @Test
     void persistGeneratesUserMetadataStatementsToDefaultContextWhenNoneIsSpecified() {
         final KodiUserAccount user = initUserAccount();
-
         sut.persist(user);
+
+        verifyBasicUserMetadataPersist(user);
+    }
+
+    private void verifyBasicUserMetadataPersist(KodiUserAccount user) {
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName())));
@@ -87,10 +91,30 @@ class UserAccountDaoTest {
 
         sut.persist(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
-        verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
+        verifyBasicUserMetadataPersist(user);
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
+    }
+
+    @Test
+    void updateRemovesExistingUserMetadataStatementsAndPersistsNewData() {
+        final KodiUserAccount user = initUserAccount();
+
+        sut.update(user);
+        final IRI subj = vf.createIRI(user.getUri().toString());
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getFirstName()), null);
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getLastName()), null);
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getUsername()), null);
+        verifyBasicUserMetadataPersist(user);
+    }
+
+    @Test
+    void updateRemovesEmailWhenItsPropertyIsConfigured() {
+        final KodiUserAccount user = initUserAccount();
+        vocabulary.setEmail(FOAF.MBOX.stringValue());
+
+        sut.update(user);
+        final IRI subj = vf.createIRI(user.getUri().toString());
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getEmail()), null);
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
     }
 }
