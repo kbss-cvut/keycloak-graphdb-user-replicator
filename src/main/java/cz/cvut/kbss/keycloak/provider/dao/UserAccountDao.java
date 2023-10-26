@@ -3,6 +3,7 @@ package cz.cvut.kbss.keycloak.provider.dao;
 import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
 import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -21,10 +22,13 @@ public class UserAccountDao {
 
     private final Vocabulary vocabulary;
 
-    public UserAccountDao(RepositoryConnection connection, Vocabulary vocabulary) {
+    private final String repoLang;
+
+    public UserAccountDao(RepositoryConnection connection, Vocabulary vocabulary, String repoLang) {
         this.connection = connection;
         this.vf = connection.getValueFactory();
         this.vocabulary = vocabulary;
+        this.repoLang = repoLang;
     }
 
     public void persist(KodiUserAccount userAccount) {
@@ -48,17 +52,25 @@ public class UserAccountDao {
         final List<Statement> statements = new ArrayList<>(Arrays.asList(
                 vf.createStatement(subject, RDF.TYPE, vf.createIRI(vocabulary.getType())),
                 vf.createStatement(subject, vf.createIRI(vocabulary.getFirstName()),
-                                   vf.createLiteral(userAccount.getFirstName())),
+                                   stringLiteral(userAccount.getFirstName())),
                 vf.createStatement(subject, vf.createIRI(vocabulary.getLastName()),
-                                   vf.createLiteral(userAccount.getLastName())),
+                                   stringLiteral(userAccount.getLastName())),
                 vf.createStatement(subject, vf.createIRI(vocabulary.getUsername()),
-                                   vf.createLiteral(userAccount.getUsername()))
+                                   stringLiteral(userAccount.getUsername()))
         ));
         if (vocabulary.getEmail() != null) {
             statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()),
-                                              vf.createLiteral(userAccount.getEmail())));
+                                              stringLiteral(userAccount.getEmail())));
         }
         return statements;
+    }
+
+    private Literal stringLiteral(String value) {
+        if (repoLang != null) {
+            return vf.createLiteral(value, repoLang);
+        } else {
+            return vf.createLiteral(value);
+        }
     }
 
     public void update(KodiUserAccount userAccount) {

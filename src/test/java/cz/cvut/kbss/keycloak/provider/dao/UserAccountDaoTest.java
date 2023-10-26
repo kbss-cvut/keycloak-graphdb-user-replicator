@@ -36,7 +36,7 @@ class UserAccountDaoTest {
     @BeforeEach
     void setUp() {
         when(connection.getValueFactory()).thenReturn(vf);
-        this.sut = new UserAccountDao(connection, vocabulary);
+        this.sut = new UserAccountDao(connection, vocabulary, null);
     }
 
     @AfterEach
@@ -116,5 +116,21 @@ class UserAccountDaoTest {
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).remove(subj, vf.createIRI(vocabulary.getEmail()), null);
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
+    }
+
+    @Test
+    void persistSavesStringLiteralsWithLanguageTagWhenItIsConfigured() {
+        final String lang = "cs";
+        vocabulary.setEmail(FOAF.MBOX.stringValue());
+        this.sut = new UserAccountDao(connection, vocabulary, lang);
+        final KodiUserAccount user = initUserAccount();
+        sut.persist(user);
+
+        final IRI subj = vf.createIRI(user.getUri().toString());
+        verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail(), lang)));
     }
 }

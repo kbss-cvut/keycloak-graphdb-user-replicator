@@ -20,7 +20,9 @@ public class Configuration {
 
     private final String repositoryPassword;
 
-    private final String graphDBServerUrl;
+    private final String repositoryLanguage;
+
+    private final String dbServerUrl;
 
     private final Vocabulary vocabulary;
 
@@ -38,19 +40,20 @@ public class Configuration {
             final Map<String, Object> dbServer =
                 (Map<String, Object>) parseComponents(components).get("al-db-server");
             final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
-            this.graphDBServerUrl = parser.getGraphdbUrl();
+            this.dbServerUrl = parser.getGraphdbUrl();
             this.repositoryId = parser.getRepositoryId();
             final Map<String, Object> authServer =
                 (Map<String, Object>) parseComponents(components).get("al-auth-server");
             final AuthServerParser aParser = new AuthServerParser(authServer.get("url").toString());
             this.realmId = aParser.getRealmId();
         } else {
-            this.graphDBServerUrl = getProperty("DB_SERVER_URL");
+            this.dbServerUrl = getProperty("DB_SERVER_URL");
             this.repositoryId = getProperty("DB_SERVER_REPOSITORY_ID");
             this.realmId = getProperty("REALM_ID");
         }
         this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
         this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
+        this.repositoryLanguage = getOptionalProperty("REPOSITORY_LANGUAGE").orElse(null);
         this.addAccounts = getBooleanProperty("ADD_ACCOUNTS", true);
         KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
         KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
@@ -105,8 +108,12 @@ public class Configuration {
         return repositoryPassword;
     }
 
-    public String getGraphDBServerUrl() {
-        return graphDBServerUrl;
+    public String getRepositoryLanguage() {
+        return repositoryLanguage;
+    }
+
+    public String getDbServerUrl() {
+        return dbServerUrl;
     }
 
     public boolean shouldAddAccounts() {

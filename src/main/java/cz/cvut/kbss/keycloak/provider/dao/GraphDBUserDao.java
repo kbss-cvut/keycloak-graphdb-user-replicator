@@ -70,7 +70,7 @@ public class GraphDBUserDao {
     }
 
     private String resolveUserEndpointUrl(String username) {
-        String url = configuration.getGraphDBServerUrl();
+        String url = configuration.getDbServerUrl();
         if (!url.endsWith("/")) {
             url += "/";
         }

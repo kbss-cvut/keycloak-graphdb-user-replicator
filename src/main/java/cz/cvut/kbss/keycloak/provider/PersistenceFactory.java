@@ -13,7 +13,7 @@ class PersistenceFactory {
 
     static Repository connect(Configuration configuration) {
         LOG.info("Initializing connection to repository {}.", configuration.getRepositoryId());
-        final String url = configuration.getGraphDBServerUrl() + "/repositories/" + configuration.getRepositoryId();
+        final String url = configuration.getDbServerUrl() + "/repositories/" + configuration.getRepositoryId();
         return connectToRemoteRepository(url, configuration);
     }
 
