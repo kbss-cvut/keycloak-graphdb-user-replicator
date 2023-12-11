@@ -1,6 +1,6 @@
 package cz.cvut.kbss.keycloak.provider.dao;
 
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
+import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -41,18 +41,18 @@ class UserAccountDaoTest {
 
     @AfterEach
     void tearDown() {
-        KodiUserAccount.setContext(null);
+        UserAccount.setContext(null);
     }
 
     @Test
     void persistGeneratesUserMetadataStatementsToDefaultContextWhenNoneIsSpecified() {
-        final KodiUserAccount user = initUserAccount();
+        final UserAccount user = initUserAccount();
         sut.persist(user);
 
         verifyBasicUserMetadataPersist(user);
     }
 
-    private void verifyBasicUserMetadataPersist(KodiUserAccount user) {
+    private void verifyBasicUserMetadataPersist(UserAccount user) {
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName())));
@@ -60,8 +60,8 @@ class UserAccountDaoTest {
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
     }
 
-    private KodiUserAccount initUserAccount() {
-        final KodiUserAccount user = new KodiUserAccount();
+    private UserAccount initUserAccount() {
+        final UserAccount user = new UserAccount();
         user.setUri(URI.create(vocabulary.getType() + "/" + UUID.randomUUID()));
         user.setFirstName("First");
         user.setLastName("Last");
@@ -73,8 +73,8 @@ class UserAccountDaoTest {
     @Test
     void persistGeneratesUserMetadataStatementsToContextWhenItIsConfigured() {
         final String context = cz.cvut.kbss.keycloak.provider.Vocabulary.s_i_uzivatel;
-        final KodiUserAccount user = initUserAccount();
-        KodiUserAccount.setContext(context);
+        final UserAccount user = initUserAccount();
+        UserAccount.setContext(context);
 
         sut.persist(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
@@ -86,7 +86,7 @@ class UserAccountDaoTest {
 
     @Test
     void persistGeneratesEmailStatementWhenEmailPropertyIsConfigured() {
-        final KodiUserAccount user = initUserAccount();
+        final UserAccount user = initUserAccount();
         vocabulary.setEmail(FOAF.MBOX.stringValue());
 
         sut.persist(user);
@@ -97,7 +97,7 @@ class UserAccountDaoTest {
 
     @Test
     void updateRemovesExistingUserMetadataStatementsAndPersistsNewData() {
-        final KodiUserAccount user = initUserAccount();
+        final UserAccount user = initUserAccount();
 
         sut.update(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
@@ -109,7 +109,7 @@ class UserAccountDaoTest {
 
     @Test
     void updateRemovesEmailWhenItsPropertyIsConfigured() {
-        final KodiUserAccount user = initUserAccount();
+        final UserAccount user = initUserAccount();
         vocabulary.setEmail(FOAF.MBOX.stringValue());
 
         sut.update(user);
@@ -123,7 +123,7 @@ class UserAccountDaoTest {
         final String lang = "cs";
         vocabulary.setEmail(FOAF.MBOX.stringValue());
         this.sut = new UserAccountDao(connection, vocabulary, lang);
-        final KodiUserAccount user = initUserAccount();
+        final UserAccount user = initUserAccount();
         sut.persist(user);
 
         final IRI subj = vf.createIRI(user.getUri().toString());
@@ -136,7 +136,7 @@ class UserAccountDaoTest {
 
     @Test
     void persistSkipsNullUserAttributes() {
-        final KodiUserAccount user = new KodiUserAccount();
+        final UserAccount user = new UserAccount();
         user.setUri(URI.create(vocabulary.getType() + "/" + UUID.randomUUID()));
         user.setUsername("username");
         sut.persist(user);

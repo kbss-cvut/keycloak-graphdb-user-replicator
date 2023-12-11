@@ -5,7 +5,7 @@ import org.keycloak.models.UserModel;
 import java.net.URI;
 import java.util.Objects;
 
-public class KodiUserAccount {
+public class UserAccount {
 
     private static String namespace = "http://onto.fel.cvut.cz/ontologies/uzivatel/";
 
@@ -21,10 +21,10 @@ public class KodiUserAccount {
 
     private String email;
 
-    public KodiUserAccount() {
+    public UserAccount() {
     }
 
-    public KodiUserAccount(UserModel userModel) {
+    public UserAccount(UserModel userModel) {
         Objects.requireNonNull(userModel);
         this.uri = URI.create(namespace + userModel.getId());
         this.firstName = userModel.getFirstName();
@@ -75,12 +75,12 @@ public class KodiUserAccount {
 
     public static void setNamespace(String namespace) {
         if (namespace != null) {
-            KodiUserAccount.namespace = namespace;
+            UserAccount.namespace = namespace;
         }
     }
 
     public static void setContext(String context) {
-        KodiUserAccount.context = context;
+        UserAccount.context = context;
     }
 
     public static String getContext() {

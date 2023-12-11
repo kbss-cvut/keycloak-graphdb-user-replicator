@@ -1,6 +1,6 @@
 package cz.cvut.kbss.keycloak.provider;
 
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
+import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
@@ -55,8 +55,8 @@ public class Configuration {
         this.repositoryPassword = getProperty("REPOSITORY_PASSWORD");
         this.repositoryLanguage = getOptionalProperty("REPOSITORY_LANGUAGE").orElse(null);
         this.addAccounts = getBooleanProperty("ADD_ACCOUNTS", true);
-        KodiUserAccount.setNamespace(getProperty("NAMESPACE"));
-        KodiUserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
+        UserAccount.setNamespace(getProperty("NAMESPACE"));
+        UserAccount.setContext(getProperty("DB_SERVER_CONTEXT"));
         this.vocabulary = initVocabulary();
     }
 

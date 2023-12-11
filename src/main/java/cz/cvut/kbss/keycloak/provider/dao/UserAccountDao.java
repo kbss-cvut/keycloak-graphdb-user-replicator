@@ -1,6 +1,6 @@
 package cz.cvut.kbss.keycloak.provider.dao;
 
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
+import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -33,23 +33,23 @@ public class UserAccountDao {
         this.repoLang = repoLang;
     }
 
-    public void persist(KodiUserAccount userAccount) {
+    public void persist(UserAccount userAccount) {
         Objects.requireNonNull(userAccount);
         connection.begin();
         persistInTransaction(userAccount);
         connection.commit();
     }
 
-    private void persistInTransaction(KodiUserAccount userAccount) {
-        if (Objects.isNull(KodiUserAccount.getContext()) || KodiUserAccount.getContext().isEmpty()) {
+    private void persistInTransaction(UserAccount userAccount) {
+        if (Objects.isNull(UserAccount.getContext()) || UserAccount.getContext().isEmpty()) {
             generateUserMetadataStatements(userAccount).forEach(connection::add);
         } else {
             generateUserMetadataStatements(userAccount).forEach(
-                    s -> connection.add(s, vf.createIRI(KodiUserAccount.getContext())));
+                    s -> connection.add(s, vf.createIRI(UserAccount.getContext())));
         }
     }
 
-    private List<Statement> generateUserMetadataStatements(KodiUserAccount userAccount) {
+    private List<Statement> generateUserMetadataStatements(UserAccount userAccount) {
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
         assert userAccount.getUsername() != null;
         final List<Statement> statements = new ArrayList<>(Arrays.asList(
@@ -84,7 +84,7 @@ public class UserAccountDao {
         }
     }
 
-    public void update(KodiUserAccount userAccount) {
+    public void update(UserAccount userAccount) {
         Objects.requireNonNull(userAccount);
         connection.begin();
         final IRI subject = vf.createIRI(userAccount.getUri().toString());

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.cvut.kbss.keycloak.provider.Configuration;
 import cz.cvut.kbss.keycloak.provider.exception.GraphDBConnectionException;
 import cz.cvut.kbss.keycloak.provider.model.GraphDBUserDto;
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
+import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
@@ -34,7 +34,7 @@ public class GraphDBUserDao {
         this.configuration = configuration;
     }
 
-    public void addUser(KodiUserAccount userAccount) {
+    public void addUser(UserAccount userAccount) {
         final GraphDBUserDto userDto = new GraphDBUserDto();
         userDto.addAccessToRepository(configuration.getRepositoryId());
         assert userAccount.getUsername() != null;

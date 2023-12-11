@@ -2,7 +2,7 @@ package cz.cvut.kbss.keycloak.provider;
 
 import cz.cvut.kbss.keycloak.provider.dao.GraphDBUserDao;
 import cz.cvut.kbss.keycloak.provider.dao.UserAccountDao;
-import cz.cvut.kbss.keycloak.provider.model.KodiUserAccount;
+import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.admin.AdminEvent;
@@ -64,30 +64,30 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
     }
 
-    private void newUser(KodiUserAccount userAccount) {
+    private void newUser(UserAccount userAccount) {
         LOG.info("Generating new user metadata into triple store for user {}", userAccount);
         userAccountDao.persist(userAccount);
         addGraphDBUser(userAccount);
     }
 
-    private void addGraphDBUser(KodiUserAccount userAccount) {
+    private void addGraphDBUser(UserAccount userAccount) {
         if (keycloakAdapter.shouldAddAccounts()) {
             LOG.info("Adding user account to GraphDB user database.");
             graphDBUserDao.addUser(userAccount);
         }
     }
 
-    private void updateUser(KodiUserAccount userAccount) {
+    private void updateUser(UserAccount userAccount) {
         LOG.info("Updating metadata of user {} in triple store", userAccount);
         userAccountDao.update(userAccount);
         addGraphDBUser(userAccount);
     }
 
-    private KodiUserAccount resolveUser(Event event) {
+    private UserAccount resolveUser(Event event) {
         return getUser(event.getUserId(), event.getRealmId());
     }
 
-    private KodiUserAccount getUser(String userId, String realmId) {
+    private UserAccount getUser(String userId, String realmId) {
         return keycloakAdapter.getUser(userId, realmId);
     }
 
@@ -114,7 +114,7 @@ public class DataReplicationProvider implements EventListenerProvider {
         }
     }
 
-    private KodiUserAccount resolveUser(AdminEvent event) {
+    private UserAccount resolveUser(AdminEvent event) {
         final String resourceUri = event.getResourcePath();
         final String userIdPath = resourceUri.substring(resourceUri.lastIndexOf("users/") + 6);
         final int slashIndex = userIdPath.indexOf('/');
