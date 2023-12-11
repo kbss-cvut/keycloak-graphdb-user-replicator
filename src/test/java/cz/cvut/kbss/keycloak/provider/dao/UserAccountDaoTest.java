@@ -133,4 +133,16 @@ class UserAccountDaoTest {
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername(), lang)));
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail(), lang)));
     }
+
+    @Test
+    void persistSkipsNullUserAttributes() {
+        final KodiUserAccount user = new KodiUserAccount();
+        user.setUri(URI.create(vocabulary.getType() + "/" + UUID.randomUUID()));
+        user.setUsername("username");
+        sut.persist(user);
+
+        final IRI subj = vf.createIRI(user.getUri().toString());
+        verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
+    }
 }

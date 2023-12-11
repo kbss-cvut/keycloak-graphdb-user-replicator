@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class UserAccountDao {
 
@@ -49,20 +51,29 @@ public class UserAccountDao {
 
     private List<Statement> generateUserMetadataStatements(KodiUserAccount userAccount) {
         final IRI subject = vf.createIRI(userAccount.getUri().toString());
+        assert userAccount.getUsername() != null;
         final List<Statement> statements = new ArrayList<>(Arrays.asList(
                 vf.createStatement(subject, RDF.TYPE, vf.createIRI(vocabulary.getType())),
-                vf.createStatement(subject, vf.createIRI(vocabulary.getFirstName()),
-                                   stringLiteral(userAccount.getFirstName())),
-                vf.createStatement(subject, vf.createIRI(vocabulary.getLastName()),
-                                   stringLiteral(userAccount.getLastName())),
                 vf.createStatement(subject, vf.createIRI(vocabulary.getUsername()),
                                    stringLiteral(userAccount.getUsername()))
         ));
+        createOptionalStatement(subject, vocabulary.getFirstName(),
+                                userAccount::getFirstName).ifPresent(statements::add);
+        createOptionalStatement(subject, vocabulary.getLastName(),
+                                userAccount::getLastName).ifPresent(statements::add);
         if (vocabulary.getEmail() != null) {
-            statements.add(vf.createStatement(subject, vf.createIRI(vocabulary.getEmail()),
-                                              stringLiteral(userAccount.getEmail())));
+            createOptionalStatement(subject, vocabulary.getEmail(),
+                                    userAccount::getEmail).ifPresent(statements::add);
         }
         return statements;
+    }
+
+    private Optional<Statement> createOptionalStatement(IRI subject, String property, Supplier<String> getter) {
+        final String propertyValue = getter.get();
+        if (propertyValue == null) {
+            return Optional.empty();
+        }
+        return Optional.of(vf.createStatement(subject, vf.createIRI(property), stringLiteral(propertyValue)));
     }
 
     private Literal stringLiteral(String value) {
