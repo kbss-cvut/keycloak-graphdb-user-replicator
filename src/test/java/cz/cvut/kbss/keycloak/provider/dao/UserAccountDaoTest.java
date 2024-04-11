@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.net.URI;
 import java.util.UUID;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,10 +60,10 @@ class UserAccountDaoTest {
         final UserAccount user = initUserAccount();
         sut.persist(user);
 
-        verifyBasicUserMetadataPersist(user);
+        verifyBasicUserMetadataPersist(user, connection);
     }
 
-    private void verifyBasicUserMetadataPersist(UserAccount user) {
+    private void verifyBasicUserMetadataPersist(UserAccount user, RepositoryConnection connection) {
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
         verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()),
@@ -110,7 +111,7 @@ class UserAccountDaoTest {
 
         sut.persist(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
-        verifyBasicUserMetadataPersist(user);
+        verifyBasicUserMetadataPersist(user, connection);
         verify(connection).add(
                 vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
     }
@@ -124,7 +125,7 @@ class UserAccountDaoTest {
         verify(connection).remove(subj, vf.createIRI(vocabulary.getFirstName()), null);
         verify(connection).remove(subj, vf.createIRI(vocabulary.getLastName()), null);
         verify(connection).remove(subj, vf.createIRI(vocabulary.getUsername()), null);
-        verifyBasicUserMetadataPersist(user);
+        verifyBasicUserMetadataPersist(user, connection);
     }
 
     @Test
@@ -170,5 +171,38 @@ class UserAccountDaoTest {
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
         verify(connection).add(
                 vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
+    }
+
+    @Test
+    void persistPersistsUserMetadataIntoAllConfiguredRepositories() {
+        final Repository repositoryII = mock(Repository.class);
+        final RepositoryConnection connectionII = mock(RepositoryConnection.class);
+        when(repositoryII.getConnection()).thenReturn(connectionII);
+        repositories.add(repositoryII);
+        final UserAccount user = initUserAccount();
+
+        sut.persist(user);
+        verifyBasicUserMetadataPersist(user, connection);
+        verifyBasicUserMetadataPersist(user, connectionII);
+    }
+
+    @Test
+    void updateRemovesExistingUserMetadataStatementsAndPersistsNewDataInAllConfiguredRepositories() {
+        final Repository repositoryII = mock(Repository.class);
+        final RepositoryConnection connectionII = mock(RepositoryConnection.class);
+        when(repositoryII.getConnection()).thenReturn(connectionII);
+        repositories.add(repositoryII);
+        final UserAccount user = initUserAccount();
+
+        sut.update(user);
+        final IRI subj = vf.createIRI(user.getUri().toString());
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getFirstName()), null);
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getLastName()), null);
+        verify(connection).remove(subj, vf.createIRI(vocabulary.getUsername()), null);
+        verifyBasicUserMetadataPersist(user, connection);
+        verify(connectionII).remove(subj, vf.createIRI(vocabulary.getFirstName()), null);
+        verify(connectionII).remove(subj, vf.createIRI(vocabulary.getLastName()), null);
+        verify(connectionII).remove(subj, vf.createIRI(vocabulary.getUsername()), null);
+        verifyBasicUserMetadataPersist(user, connectionII);
     }
 }
