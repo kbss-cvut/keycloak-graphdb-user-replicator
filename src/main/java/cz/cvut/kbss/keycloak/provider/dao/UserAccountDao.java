@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider.dao;
 
+import cz.cvut.kbss.keycloak.provider.Repositories;
 import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
@@ -20,27 +21,25 @@ public class UserAccountDao {
 
     private final ValueFactory vf;
 
-    private final RepositoryConnection connection;
+    private final Repositories repositories;
 
     private final Vocabulary vocabulary;
 
     private final String repoLang;
 
-    public UserAccountDao(RepositoryConnection connection, Vocabulary vocabulary, String repoLang) {
-        this.connection = connection;
-        this.vf = connection.getValueFactory();
+    public UserAccountDao(Repositories repositories, Vocabulary vocabulary, String repoLang) {
+        this.repositories = repositories;
+        this.vf = repositories.getValueFactory();
         this.vocabulary = vocabulary;
         this.repoLang = repoLang;
     }
 
     public void persist(UserAccount userAccount) {
         Objects.requireNonNull(userAccount);
-        connection.begin();
-        persistInTransaction(userAccount);
-        connection.commit();
+        repositories.execute(conn -> persistInTransaction(userAccount, conn));
     }
 
-    private void persistInTransaction(UserAccount userAccount) {
+    private void persistInTransaction(UserAccount userAccount, RepositoryConnection connection) {
         if (Objects.isNull(UserAccount.getContext()) || UserAccount.getContext().isEmpty()) {
             generateUserMetadataStatements(userAccount).forEach(connection::add);
         } else {
@@ -86,19 +85,15 @@ public class UserAccountDao {
 
     public void update(UserAccount userAccount) {
         Objects.requireNonNull(userAccount);
-        connection.begin();
-        final IRI subject = vf.createIRI(userAccount.getUri().toString());
-        connection.remove(subject, vf.createIRI(vocabulary.getFirstName()), null);
-        connection.remove(subject, vf.createIRI(vocabulary.getLastName()), null);
-        connection.remove(subject, vf.createIRI(vocabulary.getUsername()), null);
-        if (vocabulary.getEmail() != null) {
-            connection.remove(subject, vf.createIRI(vocabulary.getEmail()), null);
-        }
-        persistInTransaction(userAccount);
-        connection.commit();
-    }
-
-    public void close() {
-        connection.close();
+        repositories.execute(conn -> {
+            final IRI subject = vf.createIRI(userAccount.getUri().toString());
+            conn.remove(subject, vf.createIRI(vocabulary.getFirstName()), null);
+            conn.remove(subject, vf.createIRI(vocabulary.getLastName()), null);
+            conn.remove(subject, vf.createIRI(vocabulary.getUsername()), null);
+            if (vocabulary.getEmail() != null) {
+                conn.remove(subject, vf.createIRI(vocabulary.getEmail()), null);
+            }
+            persistInTransaction(userAccount, conn);
+        });
     }
 }

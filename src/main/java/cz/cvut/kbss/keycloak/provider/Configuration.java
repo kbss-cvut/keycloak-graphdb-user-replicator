@@ -1,7 +1,10 @@
 package cz.cvut.kbss.keycloak.provider;
 
 import cz.cvut.kbss.keycloak.provider.model.UserAccount;
+
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,7 +17,7 @@ public class Configuration {
 
     private final String realmId;
 
-    private final String repositoryId;
+    private final List<String> repositoryIds;
 
     private final String repositoryUsername;
 
@@ -41,14 +44,14 @@ public class Configuration {
                 (Map<String, Object>) parseComponents(components).get("al-db-server");
             final GraphDbUrlParser parser = new GraphDbUrlParser(dbServer.get("url").toString());
             this.dbServerUrl = parser.getGraphdbUrl();
-            this.repositoryId = parser.getRepositoryId();
+            this.repositoryIds = parser.getRepositoryIds();
             final Map<String, Object> authServer =
                 (Map<String, Object>) parseComponents(components).get("al-auth-server");
             final AuthServerParser aParser = new AuthServerParser(authServer.get("url").toString());
             this.realmId = aParser.getRealmId();
         } else {
             this.dbServerUrl = getProperty("DB_SERVER_URL");
-            this.repositoryId = getProperty("DB_SERVER_REPOSITORY_ID");
+            this.repositoryIds = Arrays.asList(getProperty("DB_SERVER_REPOSITORY_ID").split(","));
             this.realmId = getProperty("REALM_ID");
         }
         this.repositoryUsername = getProperty("REPOSITORY_USERNAME");
@@ -96,8 +99,8 @@ public class Configuration {
         return realmId;
     }
 
-    public String getRepositoryId() {
-        return repositoryId;
+    public List<String> getRepositoryIds() {
+        return repositoryIds;
     }
 
     public String getRepositoryUsername() {

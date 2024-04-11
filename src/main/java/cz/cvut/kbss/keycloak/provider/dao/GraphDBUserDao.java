@@ -36,7 +36,7 @@ public class GraphDBUserDao {
 
     public void addUser(UserAccount userAccount) {
         final GraphDBUserDto userDto = new GraphDBUserDto();
-        userDto.addAccessToRepository(configuration.getRepositoryId());
+        userDto.addAccessToRepository(configuration.getRepositoryIds());
         assert userAccount.getUsername() != null;
         postUserToGraphDB(userAccount.getUsername(), userDto);
     }

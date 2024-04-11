@@ -5,14 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+
 public class GraphDbUrlParserTest {
 
     @Test
     public void parsesGraphDbRepositoryUrlCorrectly() {
         final String sparqlEndpointUrl = "https://localhost/služby/graphdb/repositories/kodi";
         final GraphDbUrlParser parser = new GraphDbUrlParser(sparqlEndpointUrl);
-        assertEquals("kodi",parser.getRepositoryId());
-        assertEquals("https://localhost/služby/graphdb",parser.getGraphdbUrl());
+        assertEquals(Collections.singletonList("kodi"), parser.getRepositoryIds());
+        assertEquals("https://localhost/služby/graphdb", parser.getGraphdbUrl());
     }
 
     @Test
