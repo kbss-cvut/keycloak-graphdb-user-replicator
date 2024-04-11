@@ -124,6 +124,5 @@ public class DataReplicationProvider implements EventListenerProvider {
 
     @Override
     public void close() {
-        userAccountDao.close();
     }
 }

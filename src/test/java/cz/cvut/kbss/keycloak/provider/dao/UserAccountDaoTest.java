@@ -1,5 +1,6 @@
 package cz.cvut.kbss.keycloak.provider.dao;
 
+import cz.cvut.kbss.keycloak.provider.Repositories;
 import cz.cvut.kbss.keycloak.provider.model.UserAccount;
 import cz.cvut.kbss.keycloak.provider.model.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
@@ -7,6 +8,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.FOAF;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,14 +31,22 @@ class UserAccountDaoTest {
     private final Vocabulary vocabulary = new Vocabulary();
 
     @Mock
+    private Repository repository;
+
+    @Mock
     private RepositoryConnection connection;
+
+    private Repositories repositories;
 
     private UserAccountDao sut;
 
     @BeforeEach
     void setUp() {
-        when(connection.getValueFactory()).thenReturn(vf);
-        this.sut = new UserAccountDao(connection, vocabulary, null);
+        this.repositories = new Repositories();
+        repositories.add(repository);
+        when(repository.getConnection()).thenReturn(connection);
+        when(repository.getValueFactory()).thenReturn(vf);
+        this.sut = new UserAccountDao(repositories, vocabulary, null);
     }
 
     @AfterEach
@@ -55,9 +65,12 @@ class UserAccountDaoTest {
     private void verifyBasicUserMetadataPersist(UserAccount user) {
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()),
+                                                  vf.createLiteral(user.getFirstName())));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName())));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
     }
 
     private UserAccount initUserAccount() {
@@ -78,10 +91,16 @@ class UserAccountDaoTest {
 
         sut.persist(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
-        verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())), vf.createIRI(context));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName())), vf.createIRI(context));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName())), vf.createIRI(context));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())), vf.createIRI(context));
+        verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())),
+                               vf.createIRI(context));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()),
+                                                  vf.createLiteral(user.getFirstName())), vf.createIRI(context));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName())),
+                vf.createIRI(context));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())),
+                vf.createIRI(context));
     }
 
     @Test
@@ -92,7 +111,8 @@ class UserAccountDaoTest {
         sut.persist(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
         verifyBasicUserMetadataPersist(user);
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
     }
 
     @Test
@@ -115,23 +135,28 @@ class UserAccountDaoTest {
         sut.update(user);
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).remove(subj, vf.createIRI(vocabulary.getEmail()), null);
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail())));
     }
 
     @Test
     void persistSavesStringLiteralsWithLanguageTagWhenItIsConfigured() {
         final String lang = "cs";
         vocabulary.setEmail(FOAF.MBOX.stringValue());
-        this.sut = new UserAccountDao(connection, vocabulary, lang);
+        this.sut = new UserAccountDao(repositories, vocabulary, lang);
         final UserAccount user = initUserAccount();
         sut.persist(user);
 
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()), vf.createLiteral(user.getFirstName(), lang)));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()), vf.createLiteral(user.getLastName(), lang)));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername(), lang)));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getFirstName()),
+                                                  vf.createLiteral(user.getFirstName(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getLastName()),
+                                                  vf.createLiteral(user.getLastName(), lang)));
+        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()),
+                                                  vf.createLiteral(user.getUsername(), lang)));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getEmail()), vf.createLiteral(user.getEmail(), lang)));
     }
 
     @Test
@@ -143,6 +168,7 @@ class UserAccountDaoTest {
 
         final IRI subj = vf.createIRI(user.getUri().toString());
         verify(connection).add(vf.createStatement(subj, RDF.TYPE, vf.createIRI(vocabulary.getType())));
-        verify(connection).add(vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
+        verify(connection).add(
+                vf.createStatement(subj, vf.createIRI(vocabulary.getUsername()), vf.createLiteral(user.getUsername())));
     }
 }

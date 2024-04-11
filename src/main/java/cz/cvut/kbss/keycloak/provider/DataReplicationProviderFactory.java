@@ -2,7 +2,6 @@ package cz.cvut.kbss.keycloak.provider;
 
 import cz.cvut.kbss.keycloak.provider.dao.GraphDBUserDao;
 import cz.cvut.kbss.keycloak.provider.dao.UserAccountDao;
-import org.eclipse.rdf4j.repository.Repository;
 import org.keycloak.Config;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventListenerProviderFactory;
@@ -17,18 +16,18 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     private Configuration configuration;
 
-    private Repository repository;
+    private Repositories repositories;
 
     @Override
     public EventListenerProvider create(KeycloakSession keycloakSession) {
         LOG.info("Creating EventListenerProvider.");
-        if (repository == null) {
-            // Init persistence factory lazily, because GraphDB won't start until its OIDC provider (Keycloak) is available
-            this.repository = PersistenceFactory.connect(configuration);
+        if (repositories == null) {
+            // Init persistence factory lazily to ensure the target db server is up and running
+            this.repositories = PersistenceFactory.connect(configuration);
         }
         return new DataReplicationProvider(
                 new KeycloakAdapter(keycloakSession.users(), keycloakSession.realms(), configuration),
-                new UserAccountDao(repository.getConnection(), configuration.getVocabulary(),
+                new UserAccountDao(repositories, configuration.getVocabulary(),
                                    configuration.getRepositoryLanguage()),
                 new GraphDBUserDao(configuration));
     }
@@ -45,8 +44,8 @@ public class DataReplicationProviderFactory implements EventListenerProviderFact
 
     @Override
     public void close() {
-        if (repository != null) {
-            repository.shutDown();
+        if (repositories != null) {
+            repositories.close();
         }
     }
 

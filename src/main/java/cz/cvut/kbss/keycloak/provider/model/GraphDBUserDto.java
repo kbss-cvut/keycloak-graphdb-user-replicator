@@ -2,6 +2,7 @@ package cz.cvut.kbss.keycloak.provider.model;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 public class GraphDBUserDto {
@@ -28,10 +29,12 @@ public class GraphDBUserDto {
         return grantedAuthorities;
     }
 
-    public void addAccessToRepository(String repositoryId) {
-        Objects.requireNonNull(repositoryId);
-        grantedAuthorities.add(WRITE_REPO + repositoryId);
-        grantedAuthorities.add(READ_REPO + repositoryId);
+    public void addAccessToRepository(List<String> repositoryIds) {
+        Objects.requireNonNull(repositoryIds);
+        repositoryIds.forEach(rId -> {
+            grantedAuthorities.add(WRITE_REPO + rId);
+            grantedAuthorities.add(READ_REPO + rId);
+        });
     }
 
     static class AppSettings {
